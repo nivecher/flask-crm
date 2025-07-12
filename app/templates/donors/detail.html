@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ donor.name }}</h1>
+    <p><strong>Email:</strong> {{ donor.email }}</p>
+    <p><strong>Phone:</strong> {{ donor.phone }}</p>
+    <p><strong>Address:</strong> {{ donor.address }}</p>
+    <a href="{{ url_for('main.edit_donor', id=donor.id) }}" class="btn btn-secondary">Edit Donor</a>
+
+    <hr>
+
+    <h2>Donations</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for donation in donor.donations|sort(attribute='date', reverse=true) %}
+            <tr>
+                <td>{{ donation.date.strftime('%Y-%m-%d') }}</td>
+                <td>${{ "%.2f"|format(donation.amount) }}</td>
+                <td>{{ donation.type }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No donations yet.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h3>Add New Donation</h3>
+    <form action="{{ url_for('main.add_donation', id=donor.id) }}" method="post">
+        {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                {{ form.amount.label(class="form-label") }}
+                {{ form.amount(class="form-control") }}
+            </div>
+            <div class="col-md-4 mb-3">
+                {{ form.date.label(class="form-label") }}
+                {{ form.date(class="form-control") }}
+            </div>
+            <div class="col-md-4 mb-3">
+                {{ form.type.label(class="form-label") }}
+                {{ form.type(class="form-control", value='Online') }}
+            </div>
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
+{% endblock %}

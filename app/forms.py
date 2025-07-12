@@ -1,0 +1,65 @@
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField,
+    PasswordField,
+    BooleanField,
+    SubmitField,
+    TextAreaField,
+    DecimalField,
+)
+from wtforms.fields import DateField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from app.models import User, Donor
+
+
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    remember_me = BooleanField("Remember Me")
+    submit = SubmitField("Sign In")
+
+
+class RegistrationForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    password2 = PasswordField(
+        "Repeat Password", validators=[DataRequired(), EqualTo("password")]
+    )
+    submit = SubmitField("Register")
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError("Please use a different username.")
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError("Please use a different email address.")
+
+
+class DonorForm(FlaskForm):
+    name = StringField("Name", validators=[DataRequired()])
+    email = StringField("Email", validators=[DataRequired(), Email()])
+    phone = StringField("Phone")
+    address = TextAreaField("Address")
+    submit = SubmitField("Save Donor")
+
+    def validate_email(self, email):
+        # Allow email to be unchanged for existing donor
+        if self.email.data != self.original_email:
+            donor = Donor.query.filter_by(email=self.email.data).first()
+            if donor is not None:
+                raise ValidationError("This email is already registered.")
+
+    def __init__(self, original_email=None, *args, **kwargs):
+        super(DonorForm, self).__init__(*args, **kwargs)
+        self.original_email = original_email
+
+
+class DonationForm(FlaskForm):
+    amount = DecimalField("Amount", validators=[DataRequired()], places=2)
+    date = DateField("Date", validators=[DataRequired()], format="%Y-%m-%d")
+    type = StringField("Type", validators=[DataRequired()])
+    submit = SubmitField("Add Donation")

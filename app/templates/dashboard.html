@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Dashboard</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Donations</h5>
+                    <p class="card-text">${{ "%.2f"|format(total_donations) }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Donations</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for donation in recent_donations %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('main.donor_detail', id=donation.donor.id) }}">{{ donation.donor.name }}</a>
+                            - ${{ "%.2f"|format(donation.amount) }} on {{ donation.date.strftime('%Y-%m-%d') }}
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">No donations yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Top Donors</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for donor, total in top_donors %}
+                        <li class="list-group-item">
+                            <a href="{{ url_for('main.donor_detail', id=donor.id) }}">{{ donor.name }}</a>
+                            - ${{ "%.2f"|format(total) }}
+                        </li>
+                        {% else %}
+                        <li class="list-group-item">No donors yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

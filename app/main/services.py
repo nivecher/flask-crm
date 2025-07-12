@@ -1,34 +1,39 @@
+from typing import Any
 from app.extensions import db
 from app.models import Donor, Donation
 from sqlalchemy import func
+from flask_sqlalchemy.pagination import Pagination
+from app.forms import DonorForm, DonationForm
+from decimal import Decimal
 
 
-def get_dashboard_data():
+def get_dashboard_data() -> tuple[Decimal, list[Donation], list[tuple[Donor, Decimal]]]:
     """Get data for the dashboard."""
-    total_donations = db.session.query(func.sum(Donation.amount)).scalar() or 0
-    recent_donations = Donation.query.order_by(Donation.date.desc()).limit(5).all()
-    top_donors = (
-        db.session.query(Donor, func.sum(Donation.amount).label("total"))
+    total_donations = db.session.query(func.sum(Donation.amount)).scalar() or Decimal(0)
+    recent_donations_query = db.select(Donation).order_by(Donation.date.desc()).limit(5)
+    recent_donations = db.session.scalars(recent_donations_query).all()
+    top_donors_query = (
+        db.select(Donor, func.sum(Donation.amount).label("total"))
         .join(Donation)
         .group_by(Donor)
         .order_by(func.sum(Donation.amount).desc())
         .limit(5)
-        .all()
     )
-    return total_donations, recent_donations, top_donors
+    top_donors = db.session.execute(top_donors_query).all()
+    return total_donations, list(recent_donations), top_donors
 
 
-def get_donors_paginated(page):
+def get_donors_paginated(page: int) -> Pagination:
     """Get a paginated list of donors."""
-    return Donor.query.order_by(Donor.name).paginate(page=page, per_page=10, error_out=False)
+    return db.paginate(db.select(Donor).order_by(Donor.name), page=page, per_page=10, error_out=False)
 
 
-def get_donor_or_404(donor_id):
+def get_donor_or_404(donor_id: int) -> Donor:
     """Get a donor by ID or raise a 404 error."""
     return db.get_or_404(Donor, donor_id)
 
 
-def create_donor(form):
+def create_donor(form: DonorForm) -> Donor:
     """Create a new donor."""
     donor = Donor(
         name=form.name.data,
@@ -41,7 +46,7 @@ def create_donor(form):
     return donor
 
 
-def update_donor(donor, form):
+def update_donor(donor: Donor, form: DonorForm) -> Donor:
     """Update an existing donor."""
     donor.name = form.name.data
     donor.email = form.email.data
@@ -51,13 +56,13 @@ def update_donor(donor, form):
     return donor
 
 
-def delete_donor(donor):
+def delete_donor(donor: Donor) -> None:
     """Delete a donor."""
     db.session.delete(donor)
     db.session.commit()
 
 
-def create_donation(donor, form):
+def create_donation(donor: Donor, form: DonationForm) -> Donation:
     """Create a new donation."""
     donation = Donation(
         amount=form.amount.data,

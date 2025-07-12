@@ -1,5 +1,6 @@
 from datetime import datetime, UTC
 from flask import render_template, redirect, url_for, flash, request
+from flask.typing import ResponseReturnValue
 from flask_login import login_required
 from app.main import bp
 from app.forms import DonorForm, DonationForm
@@ -17,7 +18,7 @@ from app.main.services import (
 @bp.route("/")
 @bp.route("/dashboard")
 @login_required
-def dashboard():
+def dashboard() -> ResponseReturnValue:
     total_donations, recent_donations, top_donors = get_dashboard_data()
     return render_template(
         "dashboard.html",
@@ -30,7 +31,7 @@ def dashboard():
 
 @bp.route("/donors")
 @login_required
-def donors():
+def donors() -> ResponseReturnValue:
     page = request.args.get("page", 1, type=int)
     donors_pagination = get_donors_paginated(page)
     next_url = (
@@ -54,7 +55,7 @@ def donors():
 
 @bp.route("/donor/<int:id>")
 @login_required
-def donor_detail(id):
+def donor_detail(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
     form = DonationForm()
     if request.method == "GET":
@@ -66,7 +67,7 @@ def donor_detail(id):
 
 @bp.route("/donor/new", methods=["GET", "POST"])
 @login_required
-def add_donor():
+def add_donor() -> ResponseReturnValue:
     form = DonorForm()
     if form.validate_on_submit():
         create_donor(form)
@@ -77,7 +78,7 @@ def add_donor():
 
 @bp.route("/donor/<int:id>/edit", methods=["GET", "POST"])
 @login_required
-def edit_donor(id):
+def edit_donor(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
     form = DonorForm(original_email=donor.email)
     if form.validate_on_submit():
@@ -94,7 +95,7 @@ def edit_donor(id):
 
 @bp.route("/donor/<int:id>/delete", methods=["POST"])
 @login_required
-def delete_donor_route(id):
+def delete_donor_route(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
     delete_donor(donor)
     flash("Donor deleted successfully.")
@@ -103,7 +104,7 @@ def delete_donor_route(id):
 
 @bp.route("/donor/<int:id>/add_donation", methods=["POST"])
 @login_required
-def add_donation(id):
+def add_donation(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
     form = DonationForm()
     if form.validate_on_submit():

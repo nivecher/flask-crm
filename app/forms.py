@@ -10,6 +10,7 @@ from wtforms import (
 from wtforms.fields import DateField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User, Donor
+from typing import Any
 
 
 class LoginForm(FlaskForm):
@@ -28,12 +29,12 @@ class RegistrationForm(FlaskForm):
     )
     submit = SubmitField("Register")
 
-    def validate_username(self, username):
+    def validate_username(self, username: StringField) -> None:
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError("Please use a different username.")
 
-    def validate_email(self, email):
+    def validate_email(self, email: StringField) -> None:
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError("Please use a different email address.")
@@ -45,15 +46,16 @@ class DonorForm(FlaskForm):
     phone = StringField("Phone")
     address = TextAreaField("Address")
     submit = SubmitField("Save Donor")
+    original_email: str | None = None
 
-    def validate_email(self, email):
+    def validate_email(self, email: StringField) -> None:
         # Allow email to be unchanged for existing donor
-        if self.email.data != self.original_email:
-            donor = Donor.query.filter_by(email=self.email.data).first()
+        if self.original_email is not None and email.data != self.original_email:
+            donor = Donor.query.filter_by(email=email.data).first()
             if donor is not None:
                 raise ValidationError("This email is already registered.")
 
-    def __init__(self, original_email=None, *args, **kwargs):
+    def __init__(self, original_email: str | None = None, *args: Any, **kwargs: Any) -> None:
         super(DonorForm, self).__init__(*args, **kwargs)
         self.original_email = original_email
 

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "_formhelpers.html" as fields %}
 
 {% block content %}
     <h1>{{ donor.name }}</h1>
@@ -16,6 +17,7 @@
                 <th>Date</th>
                 <th>Amount</th>
                 <th>Type</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -46,16 +48,13 @@
         {{ form.hidden_tag() }}
         <div class="row">
             <div class="col-md-4 mb-3">
-                {{ form.amount.label(class="form-label") }}
-                {{ form.amount(class="form-control") }}
+                {{ fields.render_field(form.amount) }}
             </div>
             <div class="col-md-4 mb-3">
-                {{ form.date.label(class="form-label") }}
-                {{ form.date(class="form-control") }}
+                {{ fields.render_field(form.date) }}
             </div>
             <div class="col-md-4 mb-3">
-                {{ form.type.label(class="form-label") }}
-                {{ form.type(class="form-control", value='Online') }}
+                {{ fields.render_field(form.type) }}
             </div>
         </div>
         {{ form.submit(class="btn btn-primary") }}

@@ -50,8 +50,7 @@ class DonorForm(FlaskForm):
     original_email: str | None = None
 
     def validate_email(self, email: StringField) -> None:
-        # Allow email to be unchanged for existing donor
-        if self.original_email is not None and email.data != self.original_email:
+        if self.original_email is None or email.data != self.original_email:
             donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
             if donor is not None:
                 raise ValidationError("This email is already registered.")

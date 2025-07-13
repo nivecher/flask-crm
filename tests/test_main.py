@@ -126,3 +126,69 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         deleted_donation = db.session.get(Donation, donation.id)
         self.assertIsNone(deleted_donation)
+
+    def test_edit_nonexistent_donation(self):
+        response = self.client.get("/donation/999/edit", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Donation not found.", response.data)
+
+    def test_delete_nonexistent_donation(self):
+        response = self.client.post("/donation/999/delete", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Donation not found.", response.data)
+
+    def test_edit_donation_get(self):
+        # First, add a donor and a donation
+        donor = Donor(name="Test Donor", email="test.donor@example.com")
+        db.session.add(donor)
+        db.session.commit()
+        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        db.session.add(donation)
+        db.session.commit()
+
+        response = self.client.get(f"/donation/{donation.id}/edit")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Edit Donation", response.data)
+
+    def test_add_donor_with_existing_email(self):
+        # First, add a donor
+        donor = Donor(name="John Doe", email="john.doe@example.com")
+        db.session.add(donor)
+        db.session.commit()
+
+        response = self.client.post(
+            "/donor/new",
+            data={
+                "name": "Jane Doe",
+                "email": "john.doe@example.com",
+                "phone": "1234567890",
+                "address": "123 Main St",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"This email is already registered.", response.data)
+
+    def test_edit_donor_get(self):
+        # First, add a donor
+        donor = Donor(name="Jane Doe", email="jane.doe@example.com")
+        db.session.add(donor)
+        db.session.commit()
+
+        response = self.client.get(f"/donor/{donor.id}/edit")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Jane Doe", response.data)
+
+    def test_add_donation_invalid(self):
+        # First, add a donor
+        donor = Donor(name="Sam Doe", email="sam.doe@example.com")
+        db.session.add(donor)
+        db.session.commit()
+
+        response = self.client.post(
+            f"/donor/{donor.id}/add_donation",
+            data={"amount": "", "date": "2025-07-12", "type": "Online"},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"This field is required.", response.data)

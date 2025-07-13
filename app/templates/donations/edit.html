@@ -8,6 +8,6 @@
         {{ fields.render_field(form.amount) }}
         {{ fields.render_field(form.date) }}
         {{ fields.render_field(form.type) }}
-        {{ fields.render_field(form.submit) }}
+        {{ form.submit(class="btn btn-primary") }}
     </form>
 {% endblock content %}

@@ -13,7 +13,7 @@ def edit_donation_route(donation_id):
     donation = db.session.get(Donation, donation_id)
     if not donation:
         flash("Donation not found.", "danger")
-        return redirect(url_for("main.index"))
+        return redirect(url_for("main.dashboard"))
     form = DonationForm(obj=donation)
     if form.validate_on_submit():
         update_donation(donation, form.amount.data, form.date.data, form.type.data)
@@ -30,7 +30,7 @@ def delete_donation_route(donation_id):
     donation = db.session.get(Donation, donation_id)
     if not donation:
         flash("Donation not found.", "danger")
-        return redirect(url_for("main.index"))
+        return redirect(url_for("main.dashboard"))
     donor_id = donation.donor_id
     delete_donation(donation)
     flash("Donation deleted successfully.", "success")

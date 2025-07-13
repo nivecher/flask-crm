@@ -80,7 +80,7 @@ def add_donor() -> ResponseReturnValue:
 @login_required
 def edit_donor(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
-    form = DonorForm(original_email=donor.email)
+    form = DonorForm(obj=donor, original_email=donor.email)
     if form.validate_on_submit():
         update_donor(donor, form)
         flash("Donor updated successfully.")
@@ -110,5 +110,6 @@ def add_donation(id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         create_donation(donor, form)
         flash("Donation added successfully.")
-    return redirect(url_for("main.donor_detail", id=id))
+        return redirect(url_for("main.donor_detail", id=id))
+    return render_template("donors/detail.html", title=donor.name, donor=donor, form=form)
 

@@ -1,18 +1,17 @@
 from app.extensions import db
 from app.models import Donor, Donation
-from app.auth.services import create_user
 from tests.base import BaseTestCase
+from tests.factories import UserFactory, DonorFactory, DonationFactory
 from datetime import datetime, UTC
 
 
 class MainTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
-        # Create a user and log in
-        create_user("testuser", "test@example.com", "password")
+        user = UserFactory(password="password")
         self.client.post(
             "/auth/login",
-            data={"username": "testuser", "password": "password"},
+            data={"username": user.username, "password": "password"},
             follow_redirects=True,
         )
 
@@ -36,11 +35,7 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(donor.name, "John Doe")
 
     def test_edit_donor(self):
-        # First, add a donor
-        donor = Donor(name="Jane Doe", email="jane.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.post(
             f"/donor/{donor.id}/edit",
             data={
@@ -58,11 +53,7 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(updated_donor.email, "jane.smith@example.com")
 
     def test_delete_donor(self):
-        # First, add a donor
-        donor = Donor(name="Mark Doe", email="mark.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.post(
             f"/donor/{donor.id}/delete",
             follow_redirects=True,
@@ -73,11 +64,7 @@ class MainTestCase(BaseTestCase):
         self.assertIsNone(deleted_donor)
 
     def test_add_donation(self):
-        # First, add a donor
-        donor = Donor(name="Sam Doe", email="sam.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.post(
             f"/donor/{donor.id}/add_donation",
             data={"amount": "100.00", "date": "2025-07-12", "type": "Online"},
@@ -92,14 +79,7 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(donation.amount, 100.00)
 
     def test_edit_donation(self):
-        # First, add a donor and a donation
-        donor = Donor(name="Test Donor", email="test.donor@example.com")
-        db.session.add(donor)
-        db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
-        db.session.add(donation)
-        db.session.commit()
-
+        donation = DonationFactory()
         response = self.client.post(
             f"/donation/{donation.id}/edit",
             data={"amount": "150.00", "date": "2025-07-13", "type": "Check"},
@@ -111,14 +91,7 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(updated_donation.amount, 150.00)
 
     def test_delete_donation(self):
-        # First, add a donor and a donation
-        donor = Donor(name="Test Donor", email="test.donor@example.com")
-        db.session.add(donor)
-        db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
-        db.session.add(donation)
-        db.session.commit()
-
+        donation = DonationFactory()
         response = self.client.post(
             f"/donation/{donation.id}/delete",
             follow_redirects=True,
@@ -136,29 +109,18 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_edit_donation_get(self):
-        # First, add a donor and a donation
-        donor = Donor(name="Test Donor", email="test.donor@example.com")
-        db.session.add(donor)
-        db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
-        db.session.add(donation)
-        db.session.commit()
-
+        donation = DonationFactory()
         response = self.client.get(f"/donation/{donation.id}/edit")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Edit Donation", response.data)
 
     def test_add_donor_with_existing_email(self):
-        # First, add a donor
-        donor = Donor(name="John Doe", email="john.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.post(
             "/donor/new",
             data={
                 "name": "Jane Doe",
-                "email": "john.doe@example.com",
+                "email": donor.email,
                 "phone": "1234567890",
                 "address": "123 Main St",
             },
@@ -168,21 +130,13 @@ class MainTestCase(BaseTestCase):
         self.assertIn(b"This email is already registered.", response.data)
 
     def test_edit_donor_get(self):
-        # First, add a donor
-        donor = Donor(name="Jane Doe", email="jane.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.get(f"/donor/{donor.id}/edit")
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Jane Doe", response.data)
+        self.assertIn(bytes(donor.name, "utf-8"), response.data)
 
     def test_add_donation_invalid(self):
-        # First, add a donor
-        donor = Donor(name="Sam Doe", email="sam.doe@example.com")
-        db.session.add(donor)
-        db.session.commit()
-
+        donor = DonorFactory()
         response = self.client.post(
             f"/donor/{donor.id}/add_donation",
             data={"amount": "", "date": "2025-07-12", "type": "Online"},

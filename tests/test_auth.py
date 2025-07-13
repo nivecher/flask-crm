@@ -1,7 +1,8 @@
 from app.extensions import db
 from app.models import User
-from app.auth.services import create_user
 from tests.base import BaseTestCase
+from tests.factories import UserFactory
+from app.auth.services import create_user
 
 
 class AuthTestCase(BaseTestCase):
@@ -24,10 +25,10 @@ class AuthTestCase(BaseTestCase):
         self.assertEqual(user.email, "test@example.com")
 
     def test_login_logout(self):
-        create_user("testuser", "test@example.com", "password")
+        user = UserFactory(password="password")
         response = self.client.post(
             "/auth/login",
-            data={"username": "testuser", "password": "password"},
+            data={"username": user.username, "password": "password"},
             follow_redirects=True,
         )
         self.assertEqual(response.status_code, 200)
@@ -38,12 +39,10 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Sign In", response.data)
 
     def test_login_with_invalid_password(self):
-        # Create a user first
-        create_user("testuser", "test@example.com", "password")
-        # Attempt to log in with the wrong password
+        user = UserFactory(password="password")
         response = self.client.post(
             "/auth/login",
-            data={"username": "testuser", "password": "wrongpassword"},
+            data={"username": user.username, "password": "wrongpassword"},
             follow_redirects=True,
         )
         self.assertEqual(response.status_code, 200)
@@ -51,13 +50,11 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Sign In", response.data)
 
     def test_registration_with_existing_username(self):
-        # Create a user first
-        create_user("testuser", "test@example.com", "password")
-        # Attempt to register with the same username
+        user = UserFactory()
         response = self.client.post(
             "/auth/register",
             data={
-                "username": "testuser",
+                "username": user.username,
                 "email": "another@example.com",
                 "password": "password",
                 "password2": "password",
@@ -67,14 +64,12 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Please use a different username.", response.data)
 
     def test_registration_with_existing_email(self):
-        # Create a user first
-        create_user("testuser", "test@example.com", "password")
-        # Attempt to register with the same email
+        user = UserFactory()
         response = self.client.post(
             "/auth/register",
             data={
                 "username": "anotheruser",
-                "email": "test@example.com",
+                "email": user.email,
                 "password": "password",
                 "password2": "password",
             },
@@ -83,38 +78,45 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Please use a different email address.", response.data)
 
     def test_login_page_when_logged_in(self):
-        # Create a user and log in
-        create_user("testuser", "test@example.com", "password")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
-        # Try to access the login page again
+        user = UserFactory(password="password")
+        self.client.post(
+            "/auth/login", data={"username": user.username, "password": "password"}
+        )
         response = self.client.get("/auth/login", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Dashboard", response.data)
         self.assertNotIn(b"Sign In", response.data)
 
     def test_register_page_when_logged_in(self):
-        # Create a user and log in
-        create_user("testuser", "test@example.com", "password")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
-        # Try to access the register page again
+        user = UserFactory(password="password")
+        self.client.post(
+            "/auth/login", data={"username": user.username, "password": "password"}
+        )
         response = self.client.get("/auth/register", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Dashboard", response.data)
         self.assertNotIn(b"Register", response.data)
 
     def test_user_loader(self):
-        create_user("testuser", "test@example.com", "password")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
+        user = UserFactory(password="password")
+        self.client.post(
+            "/auth/login", data={"username": user.username, "password": "password"}
+        )
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)
 
     def test_user_loader_after_logout(self):
-        create_user("testuser", "test@example.com", "password")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
+        user = UserFactory(password="password")
+        self.client.post(
+            "/auth/login", data={"username": user.username, "password": "password"}
+        )
         self.client.get("/auth/logout")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
+        self.client.post(
+            "/auth/login", data={"username": user.username, "password": "password"}
+        )
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Dashboard", response.data)
 
     def test_user_loader_with_new_client(self):
         create_user("testuser", "test@example.com", "password")

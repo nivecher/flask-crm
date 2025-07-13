@@ -52,4 +52,4 @@ class Donation(Base):
     donor_id: Mapped[int] = mapped_column(Integer, ForeignKey("donors.id"))
 
     def __repr__(self) -> str:
-        return f"<Donation ${self.amount}>"
+        return f"<Donation ${self.amount:.2f}>"

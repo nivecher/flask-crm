@@ -1,18 +1,16 @@
 from tests.base import BaseTestCase
-from app.models import User, Donor, Donation
-from decimal import Decimal
-from datetime import datetime, UTC
+from tests.factories import UserFactory, DonorFactory, DonationFactory
 
 
 class ModelsTestCase(BaseTestCase):
     def test_user_repr(self):
-        user = User(username="testuser", email="test@example.com")
+        user = UserFactory.build(username="testuser")
         self.assertEqual(repr(user), "<User testuser>")
 
     def test_donor_repr(self):
-        donor = Donor(name="Test Donor", email="test.donor@example.com")
+        donor = DonorFactory.build(name="Test Donor")
         self.assertEqual(repr(donor), "<Donor Test Donor>")
 
     def test_donation_repr(self):
-        donation = Donation(amount=Decimal("100.00"), date=datetime.now(UTC))
+        donation = DonationFactory.build(amount=100.00)
         self.assertEqual(repr(donation), "<Donation $100.00>")

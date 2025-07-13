@@ -1,5 +1,7 @@
 from datetime import datetime, UTC
-from flask import render_template, redirect, url_for, flash, request
+import csv
+import io
+from flask import render_template, redirect, url_for, flash, request, Response
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
 from app.main import bp
@@ -12,6 +14,7 @@ from app.main.services import (
     update_donor,
     delete_donor,
     create_donation,
+    get_all_donors,
 )
 
 
@@ -50,6 +53,24 @@ def donors() -> ResponseReturnValue:
         donors=donors_pagination.items,
         next_url=next_url,
         prev_url=prev_url,
+    )
+
+
+@bp.route("/donors/export/csv")
+@login_required
+def export_donors_csv() -> Response:
+    """Export donors to a CSV file."""
+    donors = get_all_donors()
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerow(["ID", "Name", "Email", "Phone", "Address"])
+    for donor in donors:
+        cw.writerow([donor.id, donor.name, donor.email, donor.phone, donor.address])
+    output = si.getvalue()
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=donors.csv"},
     )
 
 

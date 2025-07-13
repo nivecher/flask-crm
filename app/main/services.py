@@ -74,3 +74,8 @@ def create_donation(donor: Donor, form: DonationForm) -> Donation:
     db.session.add(donation)
     db.session.commit()
     return donation
+
+
+def get_all_donors() -> list[Donor]:
+    """Get all donors."""
+    return db.session.scalars(db.select(Donor).order_by(Donor.name)).all()

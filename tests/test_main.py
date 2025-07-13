@@ -144,3 +144,18 @@ class MainTestCase(BaseTestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"This field is required.", response.data)
+
+    def test_export_donors_csv(self):
+        # Create some donors
+        donor1 = DonorFactory(name="John Doe", email="john@example.com")
+        donor2 = DonorFactory(name="Jane Smith", email="jane@example.com")
+
+        response = self.client.get("/donors/export/csv")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/csv")
+        self.assertIn("attachment;filename=donors.csv", response.headers["Content-Disposition"])
+
+        data = response.data.decode("utf-8")
+        self.assertIn("ID,Name,Email,Phone,Address", data)
+        self.assertIn(f"{donor1.id},{donor1.name},{donor1.email}", data)
+        self.assertIn(f"{donor2.id},{donor2.name},{donor2.email}", data)

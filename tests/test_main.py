@@ -2,6 +2,7 @@ from app.extensions import db
 from app.models import Donor, Donation
 from app.auth.services import create_user
 from tests.base import BaseTestCase
+from datetime import datetime
 
 
 class MainTestCase(BaseTestCase):
@@ -89,3 +90,39 @@ class MainTestCase(BaseTestCase):
         ).scalar_one_or_none()
         self.assertIsNotNone(donation)
         self.assertEqual(donation.amount, 100.00)
+
+    def test_edit_donation(self):
+        # First, add a donor and a donation
+        donor = Donor(name="Test Donor", email="test.donor@example.com")
+        db.session.add(donor)
+        db.session.commit()
+        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        db.session.add(donation)
+        db.session.commit()
+
+        response = self.client.post(
+            f"/donation/{donation.id}/edit",
+            data={"amount": "150.00", "date": "2025-07-13", "type": "Check"},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"150.00", response.data)
+        updated_donation = db.session.get(Donation, donation.id)
+        self.assertEqual(updated_donation.amount, 150.00)
+
+    def test_delete_donation(self):
+        # First, add a donor and a donation
+        donor = Donor(name="Test Donor", email="test.donor@example.com")
+        db.session.add(donor)
+        db.session.commit()
+        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        db.session.add(donation)
+        db.session.commit()
+
+        response = self.client.post(
+            f"/donation/{donation.id}/delete",
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        deleted_donation = db.session.get(Donation, donation.id)
+        self.assertIsNone(deleted_donation)

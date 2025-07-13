@@ -65,4 +65,4 @@ class DonationForm(FlaskForm):
     amount = DecimalField("Amount", validators=[DataRequired()], places=2)
     date = DateField("Date", validators=[DataRequired()], format="%Y-%m-%d")
     type = StringField("Type", validators=[DataRequired()])
-    submit = SubmitField("Add Donation")
+    submit = SubmitField("Save Donation")

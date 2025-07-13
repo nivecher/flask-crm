@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% import "_formhelpers.html" as fields %}
+
+{% block content %}
+    <h1>Edit Donation</h1>
+    <form action="{{ url_for('donations.edit_donation_route', donation_id=donation.id) }}" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        {{ fields.render_field(form.amount) }}
+        {{ fields.render_field(form.date) }}
+        {{ fields.render_field(form.type) }}
+        {{ fields.render_field(form.submit) }}
+    </form>
+{% endblock content %}

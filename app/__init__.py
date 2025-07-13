@@ -25,6 +25,10 @@ def create_app(config_class=Config):
 
     app.register_blueprint(main_bp)
 
+    from app.donations import bp as donations_bp
+
+    app.register_blueprint(donations_bp, url_prefix="/donation")
+
     with app.app_context():
         from . import models  # noqa: F401
 

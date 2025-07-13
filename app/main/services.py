@@ -63,17 +63,7 @@ def delete_donor(donor: Donor) -> None:
     db.session.commit()
 
 
-def create_donation(donor: Donor, form: DonationForm) -> Donation:
-    """Create a new donation."""
-    donation = Donation(
-        amount=form.amount.data,
-        date=form.date.data,
-        type=form.type.data,
-        donor=donor,
-    )
-    db.session.add(donation)
-    db.session.commit()
-    return donation
+
 
 
 def get_all_donors() -> list[Donor]:

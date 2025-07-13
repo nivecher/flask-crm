@@ -1,7 +1,21 @@
 from app.extensions import db
-from app.models import Donation
+from app.models import Donation, Donor
 from datetime import datetime
 from decimal import Decimal
+from app.forms import DonationForm
+
+
+def create_donation(donor: Donor, form: DonationForm) -> Donation:
+    """Create a new donation."""
+    donation = Donation(
+        amount=form.amount.data,
+        date=form.date.data,
+        type=form.type.data,
+        donor=donor,
+    )
+    db.session.add(donation)
+    db.session.commit()
+    return donation
 
 
 def get_donation_or_404(donation_id: int) -> Donation:

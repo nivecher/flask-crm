@@ -10,3 +10,32 @@ body {
 .card {
     margin-bottom: 20px;
 }
+
+#address-suggestions {
+    position: relative;
+}
+
+#address-suggestions ul {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+#address-suggestions li {
+    cursor: pointer;
+    padding: 10px;
+    background-color: #fff;
+}
+
+#address-suggestions li:hover {
+    background-color: #f0f0f0;
+}
+
+#address-valid-indicator {
+    margin-left: 10px;
+    font-size: 20px;
+}

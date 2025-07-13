@@ -44,7 +44,7 @@
     <hr>
 
     <h3>Add New Donation</h3>
-    <form action="{{ url_for('main.add_donation', id=donor.id) }}" method="post">
+    <form action="{{ url_for('donations.add_donation', id=donor.id) }}" method="post">
         {{ form.hidden_tag() }}
         <div class="row">
             <div class="col-md-4 mb-3">

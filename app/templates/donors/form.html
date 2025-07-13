@@ -10,7 +10,12 @@
         {{ render_field(form.phone) }}
         <div class="form-group">
             {{ form.address.label(class="form-control-label") }}
-            {{ form.address(class="form-control") }}
+            <div class="input-group">
+                {{ form.address(class="form-control") }}
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="clear-address">Clear</button>
+                </div>
+            </div>
             <span id="address-valid-indicator"></span>
             <div id="address-suggestions"></div>
         </div>
@@ -26,9 +31,14 @@
         const suggestionsDiv = document.getElementById('address-suggestions');
         const validIndicator = document.getElementById('address-valid-indicator');
         const phoneInput = document.getElementById('phone');
+        const clearAddressButton = document.getElementById('clear-address');
+        let addressIsValid = false;
 
         addressInput.addEventListener('input', function() {
             const query = addressInput.value;
+            addressIsValid = false;
+            validIndicator.innerHTML = '';
+
             if (query.length < 3) {
                 suggestionsDiv.innerHTML = '';
                 return;
@@ -49,13 +59,30 @@
             if (e.target && e.target.matches('li.list-group-item-action')) {
                 addressInput.value = e.target.dataset.description;
                 suggestionsDiv.innerHTML = '';
-                validIndicator.innerHTML = '&#10004;'; // Checkmark
+                validIndicator.innerHTML = '<span style="color: green;">&#10004;</span>'; // Checkmark
+                addressIsValid = true;
             }
+        });
+
+        clearAddressButton.addEventListener('click', function() {
+            addressInput.value = '';
+            suggestionsDiv.innerHTML = '';
+            validIndicator.innerHTML = '';
+            addressIsValid = false;
         });
 
         phoneInput.addEventListener('input', function(e) {
             let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            if (!addressIsValid && addressInput.value.length > 0) {
+                e.preventDefault();
+                alert('Please select a valid address from the suggestions.');
+                validIndicator.innerHTML = '<span style="color: red;">&#10008;</span>'; // X mark
+            }
         });
     });
 </script>

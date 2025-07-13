@@ -13,7 +13,6 @@ from app.main.services import (
     create_donor,
     update_donor,
     delete_donor,
-    create_donation,
     get_all_donors,
 )
 import requests
@@ -98,7 +97,7 @@ def donor_detail(id: int) -> ResponseReturnValue:
     if request.method == "GET":
         form.date.data = datetime.now(UTC)
     return render_template(
-        "donors/detail.html", title=donor.name, donor=donor, form=form
+        "donations/detail.html", title=donor.name, donor=donor, form=form
     )
 
 
@@ -134,14 +133,5 @@ def delete_donor_route(id: int) -> ResponseReturnValue:
     return redirect(url_for("main.donors"))
 
 
-@bp.route("/donor/<int:id>/add_donation", methods=["POST"])
-@login_required
-def add_donation(id: int) -> ResponseReturnValue:
-    donor = get_donor_or_404(id)
-    form = DonationForm()
-    if form.validate_on_submit():
-        create_donation(donor, form)
-        flash("Donation added successfully.")
-        return redirect(url_for("main.donor_detail", id=id))
-    return render_template("donors/detail.html", title=donor.name, donor=donor, form=form)
+
 

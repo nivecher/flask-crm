@@ -80,16 +80,11 @@ def add_donor() -> ResponseReturnValue:
 @login_required
 def edit_donor(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
-    form = DonorForm(obj=donor, original_email=donor.email)
+    form = DonorForm(obj=donor)
     if form.validate_on_submit():
         update_donor(donor, form)
         flash("Donor updated successfully.")
         return redirect(url_for("main.donor_detail", id=donor.id))
-    elif request.method == "GET":
-        form.name.data = donor.name
-        form.email.data = donor.email
-        form.phone.data = donor.phone
-        form.address.data = donor.address
     return render_template("donors/form.html", title="Edit Donor", form=form)
 
 

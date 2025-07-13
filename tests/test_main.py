@@ -2,7 +2,7 @@ from app.extensions import db
 from app.models import Donor, Donation
 from app.auth.services import create_user
 from tests.base import BaseTestCase
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class MainTestCase(BaseTestCase):
@@ -96,7 +96,7 @@ class MainTestCase(BaseTestCase):
         donor = Donor(name="Test Donor", email="test.donor@example.com")
         db.session.add(donor)
         db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
         db.session.add(donation)
         db.session.commit()
 
@@ -115,7 +115,7 @@ class MainTestCase(BaseTestCase):
         donor = Donor(name="Test Donor", email="test.donor@example.com")
         db.session.add(donor)
         db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
         db.session.add(donation)
         db.session.commit()
 
@@ -129,20 +129,18 @@ class MainTestCase(BaseTestCase):
 
     def test_edit_nonexistent_donation(self):
         response = self.client.get("/donation/999/edit", follow_redirects=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Donation not found.", response.data)
+        self.assertEqual(response.status_code, 404)
 
     def test_delete_nonexistent_donation(self):
         response = self.client.post("/donation/999/delete", follow_redirects=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Donation not found.", response.data)
+        self.assertEqual(response.status_code, 404)
 
     def test_edit_donation_get(self):
         # First, add a donor and a donation
         donor = Donor(name="Test Donor", email="test.donor@example.com")
         db.session.add(donor)
         db.session.commit()
-        donation = Donation(amount=100.00, date=datetime.utcnow(), type="Online", donor_id=donor.id)
+        donation = Donation(amount=100.00, date=datetime.now(UTC), type="Online", donor_id=donor.id)
         db.session.add(donation)
         db.session.commit()
 

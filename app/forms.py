@@ -50,14 +50,15 @@ class DonorForm(FlaskForm):
     original_email: str | None = None
 
     def validate_email(self, email: StringField) -> None:
-        if self.original_email is None or email.data != self.original_email:
-            donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
-            if donor is not None:
-                raise ValidationError("This email is already registered.")
+        if self.obj and self.obj.email == email.data:
+            return
+        donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
+        if donor is not None:
+            raise ValidationError("This email is already registered.")
 
-    def __init__(self, original_email: str | None = None, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(DonorForm, self).__init__(*args, **kwargs)
-        self.original_email = original_email
+        self.obj = kwargs.get("obj")
 
 
 class DonationForm(FlaskForm):

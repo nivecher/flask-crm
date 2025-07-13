@@ -1,7 +1,7 @@
 from tests.base import BaseTestCase
 from app.models import User, Donor, Donation
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class ModelsTestCase(BaseTestCase):
@@ -14,5 +14,5 @@ class ModelsTestCase(BaseTestCase):
         self.assertEqual(repr(donor), "<Donor Test Donor>")
 
     def test_donation_repr(self):
-        donation = Donation(amount=Decimal("100.00"), date=datetime.utcnow())
+        donation = Donation(amount=Decimal("100.00"), date=datetime.now(UTC))
         self.assertEqual(repr(donation), "<Donation $100.00>")

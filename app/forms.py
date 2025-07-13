@@ -11,6 +11,7 @@ from wtforms.fields import DateField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User, Donor
 from typing import Any
+from app.extensions import db
 
 
 class LoginForm(FlaskForm):
@@ -30,12 +31,12 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
     def validate_username(self, username: StringField) -> None:
-        user = User.query.filter_by(username=username.data).first()
+        user = db.session.scalar(db.select(User).filter_by(username=username.data))
         if user is not None:
             raise ValidationError("Please use a different username.")
 
     def validate_email(self, email: StringField) -> None:
-        user = User.query.filter_by(email=email.data).first()
+        user = db.session.scalar(db.select(User).filter_by(email=email.data))
         if user is not None:
             raise ValidationError("Please use a different email address.")
 
@@ -51,7 +52,7 @@ class DonorForm(FlaskForm):
     def validate_email(self, email: StringField) -> None:
         # Allow email to be unchanged for existing donor
         if self.original_email is not None and email.data != self.original_email:
-            donor = Donor.query.filter_by(email=email.data).first()
+            donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
             if donor is not None:
                 raise ValidationError("This email is already registered.")
 

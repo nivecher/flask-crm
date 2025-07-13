@@ -1,22 +1,10 @@
-import unittest
-from app import create_app, db
+from app.extensions import db
 from app.models import User
 from app.auth.services import create_user
+from tests.base import BaseTestCase
 
 
-class AuthTestCase(unittest.TestCase):
-    def setUp(self):
-        self.app = create_app("config.TestingConfig")
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        db.create_all()
-        self.client = self.app.test_client()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
-
+class AuthTestCase(BaseTestCase):
     def test_registration(self):
         response = self.client.post(
             "/auth/register",
@@ -29,7 +17,9 @@ class AuthTestCase(unittest.TestCase):
             follow_redirects=True,
         )
         self.assertEqual(response.status_code, 200)
-        user = User.query.filter_by(username="testuser").first()
+        user = db.session.execute(
+            db.select(User).filter_by(username="testuser")
+        ).scalar_one_or_none()
         self.assertIsNotNone(user)
         self.assertEqual(user.email, "test@example.com")
 
@@ -46,3 +36,58 @@ class AuthTestCase(unittest.TestCase):
         response = self.client.get("/auth/logout", follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Sign In", response.data)
+
+    def test_login_with_invalid_password(self):
+        # Create a user first
+        create_user("testuser", "test@example.com", "password")
+        # Attempt to log in with the wrong password
+        response = self.client.post(
+            "/auth/login",
+            data={"username": "testuser", "password": "wrongpassword"},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Invalid username or password", response.data)
+        self.assertIn(b"Sign In", response.data)
+
+    def test_registration_with_existing_username(self):
+        # Create a user first
+        create_user("testuser", "test@example.com", "password")
+        # Attempt to register with the same username
+        response = self.client.post(
+            "/auth/register",
+            data={
+                "username": "testuser",
+                "email": "another@example.com",
+                "password": "password",
+                "password2": "password",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Please use a different username.", response.data)
+
+    def test_registration_with_existing_email(self):
+        # Create a user first
+        create_user("testuser", "test@example.com", "password")
+        # Attempt to register with the same email
+        response = self.client.post(
+            "/auth/register",
+            data={
+                "username": "anotheruser",
+                "email": "test@example.com",
+                "password": "password",
+                "password2": "password",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Please use a different email address.", response.data)
+
+    def test_login_page_when_logged_in(self):
+        # Create a user and log in
+        create_user("testuser", "test@example.com", "password")
+        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
+        # Try to access the login page again
+        response = self.client.get("/auth/login", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Dashboard", response.data)
+        self.assertNotIn(b"Sign In", response.data)

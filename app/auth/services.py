@@ -13,7 +13,8 @@ def create_user(username: str, email: str, password: str) -> User:
 
 def authenticate_user(username: str, password: str) -> User | None:
     """Authenticate a user."""
-    user = User.query.filter_by(username=username).first()
+    user = db.session.scalar(db.select(User).filter_by(username=username))
+
     if user is None or not user.check_password(password):
         return None
     return user

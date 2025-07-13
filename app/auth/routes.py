@@ -12,9 +12,6 @@ def login() -> ResponseReturnValue:
         return redirect(url_for("main.dashboard"))
     form = LoginForm()
     if form.validate_on_submit():
-        if form.username.data is None or form.password.data is None:
-            flash("Invalid username or password")
-            return redirect(url_for("auth.login"))
         user = authenticate_user(form.username.data, form.password.data)
         if user is None:
             flash("Invalid username or password")
@@ -36,11 +33,7 @@ def register() -> ResponseReturnValue:
         return redirect(url_for("main.dashboard"))
     form = RegistrationForm()
     if form.validate_on_submit():
-        if form.username.data is None or form.email.data is None or form.password.data is None:
-            flash("Invalid registration data")
-            return redirect(url_for("auth.register"))
         create_user(form.username.data, form.email.data, form.password.data)
         flash("Congratulations, you are now a registered user!")
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", title="Register", form=form)
-

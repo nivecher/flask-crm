@@ -1,7 +1,6 @@
-from typing import Any
 from app.extensions import db
 from app.models import Donor, Donation
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from flask_sqlalchemy.pagination import Pagination
 from app.forms import DonorForm, DonationForm
 from decimal import Decimal
@@ -9,18 +8,20 @@ from decimal import Decimal
 
 def get_dashboard_data() -> tuple[Decimal, list[Donation], list[tuple[Donor, Decimal]]]:
     """Get data for the dashboard."""
-    total_donations = db.session.query(func.sum(Donation.amount)).scalar() or Decimal(0)
+    total_donations = db.session.scalar(db.select(func.sum(Donation.amount))) or Decimal(0)
     recent_donations_query = db.select(Donation).order_by(Donation.date.desc()).limit(5)
     recent_donations = db.session.scalars(recent_donations_query).all()
+
+    total_donations_agg = func.sum(Donation.amount).label("total")
     top_donors_query = (
-        db.select(Donor, func.sum(Donation.amount).label("total"))
+        db.select(Donor, total_donations_agg)
         .join(Donation)
         .group_by(Donor)
-        .order_by(func.sum(Donation.amount).desc())
+        .order_by(desc("total"))
         .limit(5)
     )
     top_donors = db.session.execute(top_donors_query).all()
-    return total_donations, list(recent_donations), top_donors
+    return total_donations, recent_donations, top_donors
 
 
 def get_donors_paginated(page: int) -> Pagination:
@@ -50,8 +51,8 @@ def update_donor(donor: Donor, form: DonorForm) -> Donor:
     """Update an existing donor."""
     donor.name = form.name.data
     donor.email = form.email.data
-    donor.phone = form.phone.data
-    donor.address = form.address.data
+    donor.phone = form.phone.data or None
+    donor.address = form.address.data or None
     db.session.commit()
     return donor
 

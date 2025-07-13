@@ -26,6 +26,6 @@ def create_app(config_class=Config):
     app.register_blueprint(main_bp)
 
     with app.app_context():
-        from . import models
+        from . import models  # noqa: F401
 
     return app

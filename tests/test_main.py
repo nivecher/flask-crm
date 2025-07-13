@@ -1,15 +1,12 @@
-import unittest
-from app import create_app, db
-from app.models import User, Donor, Donation
+from app.extensions import db
+from app.models import Donor, Donation
 from app.auth.services import create_user
+from tests.base import BaseTestCase
 
-class MainTestCase(unittest.TestCase):
+
+class MainTestCase(BaseTestCase):
     def setUp(self):
-        self.app = create_app('config.TestingConfig')
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        db.create_all()
-        self.client = self.app.test_client()
+        super().setUp()
         # Create a user and log in
         create_user("testuser", "test@example.com", "password")
         self.client.post(
@@ -17,11 +14,6 @@ class MainTestCase(unittest.TestCase):
             data={"username": "testuser", "password": "password"},
             follow_redirects=True,
         )
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
-        self.app_context.pop()
 
     def test_add_donor(self):
         response = self.client.post(
@@ -36,7 +28,9 @@ class MainTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Donors", response.data)
-        donor = Donor.query.filter_by(email="john.doe@example.com").first()
+        donor = db.session.execute(
+            db.select(Donor).filter_by(email="john.doe@example.com")
+        ).scalar_one_or_none()
         self.assertIsNotNone(donor)
         self.assertEqual(donor.name, "John Doe")
 
@@ -90,6 +84,8 @@ class MainTestCase(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"100.00", response.data)
-        donation = Donation.query.filter_by(donor_id=donor.id).first()
+        donation = db.session.execute(
+            db.select(Donation).filter_by(donor_id=donor.id)
+        ).scalar_one_or_none()
         self.assertIsNotNone(donation)
         self.assertEqual(donation.amount, 100.00)

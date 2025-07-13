@@ -2,7 +2,6 @@ from app.extensions import db
 from app.models import Donor, Donation
 from tests.base import BaseTestCase
 from tests.factories import UserFactory, DonorFactory, DonationFactory
-from datetime import datetime, UTC
 
 
 class MainTestCase(BaseTestCase):
@@ -16,16 +15,19 @@ class MainTestCase(BaseTestCase):
         )
 
     def test_add_donor(self):
-        response = self.client.post(
-            "/donor/new",
-            data={
-                "name": "John Doe",
-                "email": "john.doe@example.com",
-                "phone": "1234567890",
-                "address": "123 Main St",
-            },
-            follow_redirects=True,
-        )
+        from unittest.mock import patch
+
+        with patch("app.forms.validate_address", return_value=True):
+            response = self.client.post(
+                "/donor/new",
+                data={
+                    "name": "John Doe",
+                    "email": "john.doe@example.com",
+                    "phone": "1234567890",
+                    "address": "123 Main St",
+                },
+                follow_redirects=True,
+            )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Donors", response.data)
         donor = db.session.execute(
@@ -35,17 +37,20 @@ class MainTestCase(BaseTestCase):
         self.assertEqual(donor.name, "John Doe")
 
     def test_edit_donor(self):
+        from unittest.mock import patch
+
         donor = DonorFactory()
-        response = self.client.post(
-            f"/donor/{donor.id}/edit",
-            data={
-                "name": "Jane Smith",
-                "email": "jane.smith@example.com",
-                "phone": "0987654321",
-                "address": "456 Oak Ave",
-            },
-            follow_redirects=True,
-        )
+        with patch("app.forms.validate_address", return_value=True):
+            response = self.client.post(
+                f"/donor/{donor.id}/edit",
+                data={
+                    "name": "Jane Smith",
+                    "email": "jane.smith@example.com",
+                    "phone": "0987654321",
+                    "address": "456 Oak Ave",
+                },
+                follow_redirects=True,
+            )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Jane Smith", response.data)
         updated_donor = db.session.get(Donor, donor.id)
@@ -115,17 +120,20 @@ class MainTestCase(BaseTestCase):
         self.assertIn(b"Edit Donation", response.data)
 
     def test_add_donor_with_existing_email(self):
+        from unittest.mock import patch
+
         donor = DonorFactory()
-        response = self.client.post(
-            "/donor/new",
-            data={
-                "name": "Jane Doe",
-                "email": donor.email,
-                "phone": "1234567890",
-                "address": "123 Main St",
-            },
-            follow_redirects=True,
-        )
+        with patch("app.forms.validate_address", return_value=True):
+            response = self.client.post(
+                "/donor/new",
+                data={
+                    "name": "Jane Doe",
+                    "email": donor.email,
+                    "phone": "1234567890",
+                    "address": "123 Main St",
+                },
+                follow_redirects=True,
+            )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"This email is already registered.", response.data)
 
@@ -159,3 +167,74 @@ class MainTestCase(BaseTestCase):
         self.assertIn("ID,Name,Email,Phone,Address", data)
         self.assertIn(f"{donor1.id},{donor1.name},{donor1.email}", data)
         self.assertIn(f"{donor2.id},{donor2.name},{donor2.email}", data)
+
+    def test_add_donor_with_invalid_address(self):
+        with self.app.app_context():
+            with self.app.test_request_context():
+                from unittest.mock import patch
+
+                with patch("app.utils.validate_address", return_value=False):
+                    response = self.client.post(
+                        "/donor/new",
+                        data={
+                            "name": "Test Donor",
+                            "email": "test@example.com",
+                            "address": "Invalid Address",
+                        },
+                        follow_redirects=True,
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(b"The address appears to be invalid.", response.data)
+
+    def test_add_donor_with_valid_address(self):
+        with self.app.app_context():
+            with self.app.test_request_context():
+                from unittest.mock import patch
+
+                with patch("app.utils.validate_address", return_value=True):
+                    response = self.client.post(
+                        "/donor/new",
+                        data={
+                            "name": "Test Donor",
+                            "email": "test@example.com",
+                            "address": "Valid Address",
+                        },
+                        follow_redirects=True,
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(b"Donors", response.data)
+
+    def test_add_donor_no_api_key(self):
+        self.app.config["GOOGLE_API_KEY"] = None
+        with self.app.app_context():
+            with self.app.test_request_context():
+                response = self.client.post(
+                    "/donor/new",
+                    data={
+                        "name": "Test Donor",
+                        "email": "test@example.com",
+                        "address": "Any Address",
+                    },
+                    follow_redirects=True,
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b"Donors", response.data)
+
+    def test_add_donor_geocoder_timeout(self):
+        with self.app.app_context():
+            with self.app.test_request_context():
+                from unittest.mock import patch
+                from geopy.exc import GeocoderTimedOut
+
+                with patch("app.utils.GoogleV3.geocode", side_effect=GeocoderTimedOut):
+                    response = self.client.post(
+                        "/donor/new",
+                        data={
+                            "name": "Test Donor",
+                            "email": "test@example.com",
+                            "address": "Any Address",
+                        },
+                        follow_redirects=True,
+                    )
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(b"The address appears to be invalid.", response.data)

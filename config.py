@@ -11,6 +11,7 @@ class Config:
         basedir, "app.db"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 
 class TestingConfig(Config):

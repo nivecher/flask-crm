@@ -12,6 +12,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User, Donor
 from typing import Any
 from app.extensions import db
+from app.utils import validate_address
 
 
 class LoginForm(FlaskForm):
@@ -55,6 +56,10 @@ class DonorForm(FlaskForm):
         donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
         if donor is not None:
             raise ValidationError("This email is already registered.")
+
+    def validate_address(self, address: TextAreaField) -> None:
+        if address.data and not validate_address(address.data):
+            raise ValidationError("The address appears to be invalid.")
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(DonorForm, self).__init__(*args, **kwargs)

@@ -17,7 +17,7 @@ class MainTestCase(BaseTestCase):
     def test_add_donor(self):
         from unittest.mock import patch
 
-        with patch("app.forms.validate_address", return_value=True):
+        with patch("app.forms.phonenumbers.is_valid_number", return_value=True):
             response = self.client.post(
                 "/donor/new",
                 data={
@@ -40,7 +40,7 @@ class MainTestCase(BaseTestCase):
         from unittest.mock import patch
 
         donor = DonorFactory()
-        with patch("app.forms.validate_address", return_value=True):
+        with patch("app.forms.phonenumbers.is_valid_number", return_value=True):
             response = self.client.post(
                 f"/donor/{donor.id}/edit",
                 data={
@@ -120,20 +120,17 @@ class MainTestCase(BaseTestCase):
         self.assertIn(b"Edit Donation", response.data)
 
     def test_add_donor_with_existing_email(self):
-        from unittest.mock import patch
-
         donor = DonorFactory()
-        with patch("app.forms.validate_address", return_value=True):
-            response = self.client.post(
-                "/donor/new",
-                data={
-                    "name": "Jane Doe",
-                    "email": donor.email,
-                    "phone": "1234567890",
-                    "address": "123 Main St",
-                },
-                follow_redirects=True,
-            )
+        response = self.client.post(
+            "/donor/new",
+            data={
+                "name": "Jane Doe",
+                "email": donor.email,
+                "phone": "1234567890",
+                "address": "123 Main St",
+            },
+            follow_redirects=True,
+        )
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"This email is already registered.", response.data)
 
@@ -168,73 +165,32 @@ class MainTestCase(BaseTestCase):
         self.assertIn(f"{donor1.id},{donor1.name},{donor1.email}", data)
         self.assertIn(f"{donor2.id},{donor2.name},{donor2.email}", data)
 
-    def test_add_donor_with_invalid_address(self):
-        with self.app.app_context():
-            with self.app.test_request_context():
-                from unittest.mock import patch
+    def test_address_autocomplete(self):
+        from unittest.mock import patch
 
-                with patch("app.utils.validate_address", return_value=False):
-                    response = self.client.post(
-                        "/donor/new",
-                        data={
-                            "name": "Test Donor",
-                            "email": "test@example.com",
-                            "address": "Invalid Address",
-                        },
-                        follow_redirects=True,
-                    )
-                    self.assertEqual(response.status_code, 200)
-                    self.assertIn(b"The address appears to be invalid.", response.data)
+        mock_response = {
+            "predictions": [
+                {"description": "123 Main St, Anytown, USA"},
+                {"description": "123 Main St, Othertown, USA"},
+            ]
+        }
+        with patch("requests.get") as mock_get:
+            mock_get.return_value.status_code = 200
+            mock_get.return_value.json.return_value = mock_response
+            response = self.client.get("/api/address-autocomplete?query=123 Main")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json, mock_response["predictions"])
 
-    def test_add_donor_with_valid_address(self):
-        with self.app.app_context():
-            with self.app.test_request_context():
-                from unittest.mock import patch
-
-                with patch("app.utils.validate_address", return_value=True):
-                    response = self.client.post(
-                        "/donor/new",
-                        data={
-                            "name": "Test Donor",
-                            "email": "test@example.com",
-                            "address": "Valid Address",
-                        },
-                        follow_redirects=True,
-                    )
-                    self.assertEqual(response.status_code, 200)
-                    self.assertIn(b"Donors", response.data)
-
-    def test_add_donor_no_api_key(self):
-        self.app.config["GOOGLE_API_KEY"] = None
-        with self.app.app_context():
-            with self.app.test_request_context():
-                response = self.client.post(
-                    "/donor/new",
-                    data={
-                        "name": "Test Donor",
-                        "email": "test@example.com",
-                        "address": "Any Address",
-                    },
-                    follow_redirects=True,
-                )
-                self.assertEqual(response.status_code, 200)
-                self.assertIn(b"Donors", response.data)
-
-    def test_add_donor_geocoder_timeout(self):
-        with self.app.app_context():
-            with self.app.test_request_context():
-                from unittest.mock import patch
-                from geopy.exc import GeocoderTimedOut
-
-                with patch("app.utils.GoogleV3.geocode", side_effect=GeocoderTimedOut):
-                    response = self.client.post(
-                        "/donor/new",
-                        data={
-                            "name": "Test Donor",
-                            "email": "test@example.com",
-                            "address": "Any Address",
-                        },
-                        follow_redirects=True,
-                    )
-                    self.assertEqual(response.status_code, 200)
-                    self.assertIn(b"The address appears to be invalid.", response.data)
+    def test_add_donor_with_invalid_phone(self):
+        response = self.client.post(
+            "/donor/new",
+            data={
+                "name": "John Doe",
+                "email": "john.doe@example.com",
+                "phone": "123",
+                "address": "123 Main St",
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Invalid phone number.", response.data)

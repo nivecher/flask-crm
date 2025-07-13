@@ -1,7 +1,7 @@
 from datetime import datetime, UTC
 import csv
 import io
-from flask import render_template, redirect, url_for, flash, request, Response
+from flask import render_template, redirect, url_for, flash, request, Response, jsonify, current_app
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
 from app.main import bp
@@ -16,6 +16,22 @@ from app.main.services import (
     create_donation,
     get_all_donors,
 )
+import requests
+
+
+@bp.route("/api/address-autocomplete")
+@login_required
+def address_autocomplete() -> Response:
+    query = request.args.get("query", "")
+    api_key = current_app.config["GOOGLE_API_KEY"]
+    if not api_key or not query:
+        return jsonify([])
+
+    url = f"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={query}&key={api_key}&types=address"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return jsonify(response.json().get("predictions", []))
+    return jsonify([])
 
 
 @bp.route("/")

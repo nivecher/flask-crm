@@ -12,7 +12,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User, Donor
 from typing import Any
 from app.extensions import db
-from app.utils import validate_address
+import phonenumbers
 
 
 class LoginForm(FlaskForm):
@@ -57,9 +57,14 @@ class DonorForm(FlaskForm):
         if donor is not None:
             raise ValidationError("This email is already registered.")
 
-    def validate_address(self, address: TextAreaField) -> None:
-        if address.data and not validate_address(address.data):
-            raise ValidationError("The address appears to be invalid.")
+    def validate_phone(self, phone: StringField) -> None:
+        if phone.data:
+            try:
+                p = phonenumbers.parse(phone.data, "US")
+                if not phonenumbers.is_valid_number(p):
+                    raise ValidationError("Invalid phone number.")
+            except phonenumbers.phonenumberutil.NumberParseException:
+                raise ValidationError("Invalid phone number.")
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super(DonorForm, self).__init__(*args, **kwargs)

@@ -10,12 +10,7 @@
         {{ render_field(form.phone) }}
         <div class="form-group">
             {{ form.address.label(class="form-control-label") }}
-            <div class="input-group">
-                {{ form.address(class="form-control") }}
-                <div class="input-group-append">
-                    <button class="btn btn-outline-secondary" type="button" id="clear-address">Clear</button>
-                </div>
-            </div>
+            {{ form.address(class="form-control") }}
             <span id="address-valid-indicator"></span>
             <div id="address-suggestions"></div>
         </div>
@@ -31,16 +26,18 @@
         const suggestionsDiv = document.getElementById('address-suggestions');
         const validIndicator = document.getElementById('address-valid-indicator');
         const phoneInput = document.getElementById('phone');
-        const clearAddressButton = document.getElementById('clear-address');
         let addressIsValid = false;
 
         addressInput.addEventListener('input', function() {
             const query = addressInput.value;
             addressIsValid = false;
-            validIndicator.innerHTML = '';
+            validIndicator.innerHTML = '<span style="color: orange;">&#9888;</span>'; // Warning icon
 
             if (query.length < 3) {
                 suggestionsDiv.innerHTML = '';
+                if (query.length === 0) {
+                    validIndicator.innerHTML = '';
+                }
                 return;
             }
             fetch(`/api/address-autocomplete?query=${query}`)
@@ -62,13 +59,6 @@
                 validIndicator.innerHTML = '<span style="color: green;">&#10004;</span>'; // Checkmark
                 addressIsValid = true;
             }
-        });
-
-        clearAddressButton.addEventListener('click', function() {
-            addressInput.value = '';
-            suggestionsDiv.innerHTML = '';
-            validIndicator.innerHTML = '';
-            addressIsValid = false;
         });
 
         phoneInput.addEventListener('input', function(e) {

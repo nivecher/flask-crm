@@ -2,7 +2,7 @@ from app.extensions import db
 from app.models import Donation, Donor
 from datetime import datetime
 from decimal import Decimal
-from app.forms import DonationForm
+from app.donations.forms import DonationForm
 
 
 def create_donation(donor: Donor, form: DonationForm) -> Donation:

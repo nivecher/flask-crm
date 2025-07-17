@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
 from app.donations import bp
-from app.forms import DonationForm
+from app.donations.forms import DonationForm
 from app.donations.services import (
     get_donation_or_404,
     update_donation,

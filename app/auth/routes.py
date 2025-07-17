@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash
 from flask.typing import ResponseReturnValue
 from flask_login import login_user, logout_user, current_user
 from app.auth import bp
-from app.forms import LoginForm, RegistrationForm
+from app.auth.forms import LoginForm, RegistrationForm
 from app.auth.services import create_user, authenticate_user
 
 

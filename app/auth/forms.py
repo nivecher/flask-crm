@@ -1,18 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import (
-    StringField,
-    PasswordField,
-    BooleanField,
-    SubmitField,
-    DecimalField,
-    DateField,
-)
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from app.models import User
-from app.utils import validate_user_email
 from app.extensions import db
 from typing import Any
-
 
 
 class LoginForm(FlaskForm):
@@ -24,7 +15,7 @@ class LoginForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired(), Email(), validate_user_email])
+    email = StringField("Email", validators=[DataRequired(), Email()])
     password = PasswordField("Password", validators=[DataRequired()])
     password2 = PasswordField(
         "Repeat Password", validators=[DataRequired(), EqualTo("password")]
@@ -36,13 +27,7 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             raise ValidationError("Please use a different username.")
 
-
-
-
-
-class DonationForm(FlaskForm):
-    amount = DecimalField("Amount", validators=[DataRequired()], places=2)
-    date = DateField("Date", validators=[DataRequired()], format="%Y-%m-%d")
-    type = StringField("Type", validators=[DataRequired()])
-    submit = SubmitField("Save Donation")
-
+    def validate_email(self, email: StringField) -> None:
+        user = db.session.scalar(db.select(User).filter_by(email=email.data))
+        if user is not None:
+            raise ValidationError("Please use a different email address.")

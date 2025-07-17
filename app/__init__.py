@@ -1,11 +1,15 @@
 from flask import Flask
-from config import Config
+from config import config_by_name
 from .extensions import db, login, migrate
+import os
 
 
-def create_app(config_class=Config):
+def create_app(config_name: str | None = None) -> Flask:
+    if config_name is None:
+        config_name = os.getenv("FLASK_CONFIG", "development")
+
     app = Flask(__name__)
-    app.config.from_object(config_class)
+    app.config.from_object(config_by_name[config_name])
 
     db.init_app(app)
     login.init_app(app)

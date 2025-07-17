@@ -9,7 +9,7 @@ from app.donations.services import (
     delete_donation,
     create_donation,
 )
-from app.main.services import get_donor_or_404
+from app.donors.services import get_donor_or_404
 
 
 @bp.route("/donor/<int:id>/add_donation", methods=["POST"])
@@ -20,7 +20,7 @@ def add_donation(id: int) -> ResponseReturnValue:
     if form.validate_on_submit():
         create_donation(donor, form)
         flash("Donation added successfully.")
-        return redirect(url_for("main.donor_detail", id=id))
+        return redirect(url_for("donors.donor_detail", id=id))
     return render_template("donations/detail.html", title=donor.name, donor=donor, form=form)
 
 
@@ -32,7 +32,7 @@ def edit_donation_route(donation_id):
     if form.validate_on_submit():
         update_donation(donation, form.amount.data, form.date.data, form.type.data)
         flash("Donation updated successfully.", "success")
-        return redirect(url_for("main.donor_detail", id=donation.donor_id))
+        return redirect(url_for("donors.donor_detail", id=donation.donor_id))
     return render_template(
         "donations/edit.html", title="Edit Donation", form=form, donation=donation
     )
@@ -45,4 +45,4 @@ def delete_donation_route(donation_id):
     donor_id = donation.donor_id
     delete_donation(donation)
     flash("Donation deleted successfully.", "success")
-    return redirect(url_for("main.donor_detail", id=donor_id))
+    return redirect(url_for("donors.donor_detail", id=donor_id))

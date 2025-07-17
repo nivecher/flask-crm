@@ -8,13 +8,42 @@
         {{ render_field(form.name) }}
         {{ render_field(form.email) }}
         {{ render_field(form.phone) }}
-        <div class="form-group">
-            {{ form.address.label(class="form-control-label") }}
-            {{ form.address(class="form-control") }}
+
+        <div class="form-group mb-3">
+            <label for="address-autocomplete" class="form-control-label">Address Search</label>
+            <div class="input-group">
+                <input type="text" id="address-autocomplete" class="form-control" placeholder="Start typing an address...">
+                <button class="btn btn-outline-secondary" type="button" id="update-address-btn" disabled>Update Address</button>
+            </div>
             <span id="address-valid-indicator"></span>
             <div id="address-suggestions"></div>
         </div>
+
+        {{ render_field(form.address_line1) }}
+        {{ render_field(form.address_line2) }}
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_field(form.city) }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.state) }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ render_field(form.postal_code) }}
+            </div>
+            <div class="col-md-6">
+                {{ render_field(form.country) }}
+            </div>
+        </div>
+
         {{ form.submit(class="btn btn-primary") }}
+        {% if form.instance %}
+        <a href="{{ url_for('donors.donor_detail', id=form.instance.id) }}" class="btn btn-secondary">Cancel</a>
+        {% else %}
+        <a href="{{ url_for('donors.donors') }}" class="btn btn-secondary">Cancel</a>
+        {% endif %}
     </form>
 {% endblock %}
 
@@ -22,57 +51,88 @@
 {{ super() }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const addressInput = document.getElementById('address');
+        console.log("Address autocomplete script loaded.");
+        const autocompleteInput = document.getElementById('address-autocomplete');
         const suggestionsDiv = document.getElementById('address-suggestions');
         const validIndicator = document.getElementById('address-valid-indicator');
-        const phoneInput = document.getElementById('phone');
-        let addressIsValid = false;
+        const updateAddressBtn = document.getElementById('update-address-btn');
+        
+        const address1 = document.getElementById('address_line1');
+        const address2 = document.getElementById('address_line2');
+        const city = document.getElementById('city');
+        const state = document.getElementById('state');
+        const postalCode = document.getElementById('postal_code');
+        const country = document.getElementById('country');
 
-        addressInput.addEventListener('input', function() {
-            const query = addressInput.value;
-            addressIsValid = false;
-            validIndicator.innerHTML = '<span style="color: orange;">&#9888;</span>'; // Warning icon
+        let selectedPlaceId = null;
+
+        autocompleteInput.addEventListener('input', function() {
+            const query = autocompleteInput.value;
+            selectedPlaceId = null;
+            updateAddressBtn.disabled = true;
+            validIndicator.innerHTML = '';
 
             if (query.length < 3) {
                 suggestionsDiv.innerHTML = '';
-                if (query.length === 0) {
-                    validIndicator.innerHTML = '';
-                }
                 return;
             }
             fetch(`/api/address-autocomplete?query=${query}`)
                 .then(response => response.json())
                 .then(data => {
+                    if (data.error) { throw new Error(data.error); }
                     let suggestionsHTML = '<ul class="list-group">';
-                    data.forEach(prediction => {
-                        suggestionsHTML += `<li class="list-group-item list-group-item-action" data-description="${prediction.description}">${prediction.description}</li>`;
-                    });
+                    if (data.length > 0) {
+                        data.forEach(p => {
+                            suggestionsHTML += `<li class="list-group-item list-group-item-action" data-place-id="${p.place_id}">${p.description}</li>`;
+                        });
+                    } else {
+                        suggestionsHTML += '<li class="list-group-item">No suggestions found.</li>';
+                    }
                     suggestionsHTML += '</ul>';
                     suggestionsDiv.innerHTML = suggestionsHTML;
+                })
+                .catch(error => {
+                    validIndicator.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
                 });
         });
 
         suggestionsDiv.addEventListener('click', function(e) {
             if (e.target && e.target.matches('li.list-group-item-action')) {
-                addressInput.value = e.target.dataset.description;
+                selectedPlaceId = e.target.dataset.placeId;
+                const description = e.target.textContent;
+                autocompleteInput.value = description;
                 suggestionsDiv.innerHTML = '';
-                validIndicator.innerHTML = '<span style="color: green;">&#10004;</span>'; // Checkmark
-                addressIsValid = true;
+                updateAddressBtn.disabled = false;
+                validIndicator.innerHTML = '<span style="color: green;">&#10004; Address selected.</span>';
             }
         });
 
-        phoneInput.addEventListener('input', function(e) {
-            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-        });
+        updateAddressBtn.addEventListener('click', function() {
+            if (!selectedPlaceId) return;
 
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            if (!addressIsValid && addressInput.value.length > 0) {
-                e.preventDefault();
-                alert('Please select a valid address from the suggestions.');
-                validIndicator.innerHTML = '<span style="color: red;">&#10008;</span>'; // X mark
-            }
+            validIndicator.innerHTML = '<span>Validating...</span>';
+
+            fetch(`/api/place-details?place_id=${selectedPlaceId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) { throw new Error(data.error); }
+                    
+                    const get = (type) => data.address_components.find(c => c.types.includes(type))?.long_name || '';
+                    
+                    address1.value = data.formatted_address.split(',')[0];
+                    address2.value = ''; // Clear this field
+                    city.value = get('locality');
+                    state.value = get('administrative_area_level_1');
+                    postalCode.value = get('postal_code');
+                    country.value = get('country');
+
+                    validIndicator.innerHTML = '<span style="color: green;">&#10004; Address populated.</span>';
+                    updateAddressBtn.disabled = true;
+                    selectedPlaceId = null;
+                })
+                .catch(error => {
+                    validIndicator.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                });
         });
     });
 </script>

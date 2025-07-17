@@ -6,6 +6,7 @@ from app.extensions import db
 class BaseTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app("config.TestingConfig")
+        self.app.config.update(WTF_CSRF_ENABLED=False)
         self.app_context = self.app.app_context()
         self.app_context.push()
         db.create_all()

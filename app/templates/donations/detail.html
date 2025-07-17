@@ -5,8 +5,13 @@
     <h1>{{ donor.name }}</h1>
     <p><strong>Email:</strong> {{ donor.email }}</p>
     <p><strong>Phone:</strong> {{ donor.phone }}</p>
-    <p><strong>Address:</strong> {{ donor.address }}</p>
-    <a href="{{ url_for('main.edit_donor', id=donor.id) }}" class="btn btn-secondary">Edit Donor</a>
+    <p><strong>Address:</strong><br>
+        {{ donor.address_line1 }}<br>
+        {% if donor.address_line2 %}{{ donor.address_line2 }}<br>{% endif %}
+        {{ donor.city }}, {{ donor.state }} {{ donor.postal_code }}<br>
+        {{ donor.country }}
+    </p>
+    <a href="{{ url_for('donors.edit_donor', id=donor.id) }}" class="btn btn-secondary">Edit Donor</a>
 
     <hr>
 

@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Dashboard</h1>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-12">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Total Donations</h5>
@@ -11,14 +11,14 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-lg-8 col-md-12">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Recent Donations</h5>
                     <ul class="list-group list-group-flush">
                         {% for donation in recent_donations %}
                         <li class="list-group-item">
-                            <a href="{{ url_for('main.donor_detail', id=donation.donor.id) }}">{{ donation.donor.name }}</a>
+                            <a href="{{ url_for('donors.donor_detail', id=donation.donor.id) }}">{{ donation.donor.name }}</a>
                             - ${{ "%.2f"|format(donation.amount) }} on {{ donation.date.strftime('%Y-%m-%d') }}
                         </li>
                         {% else %}
@@ -37,7 +37,7 @@
                     <ul class="list-group list-group-flush">
                         {% for donor, total in top_donors %}
                         <li class="list-group-item">
-                            <a href="{{ url_for('main.donor_detail', id=donor.id) }}">{{ donor.name }}</a>
+                            <a href="{{ url_for('donors.donor_detail', id=donor.id) }}">{{ donor.name }}</a>
                             - ${{ "%.2f"|format(total) }}
                         </li>
                         {% else %}

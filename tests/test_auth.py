@@ -75,7 +75,7 @@ class AuthTestCase(BaseTestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Please use a different email address.", response.data)
+        self.assertIn(b"This email is already registered.", response.data)
 
     def test_login_page_when_logged_in(self):
         user = UserFactory(password="password")

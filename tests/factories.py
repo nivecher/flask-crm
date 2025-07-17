@@ -36,15 +36,21 @@ class UserFactory(BaseFactory):
 
 
 
-class DonorFactory(BaseFactory):
+class DonorFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = Donor
+        sqlalchemy_session = db.session
 
     id = factory.Sequence(lambda n: n)
     name = factory.Faker("name")
     email = factory.Sequence(lambda n: f"donor{n}@example.com")
     phone = factory.Faker("phone_number")
-    address = factory.Faker("address")
+    address_line1 = factory.Faker("street_address")
+    city = factory.Faker("city")
+    state = factory.Faker("state_abbr")
+    postal_code = factory.Faker("zipcode")
+    country = "US"
+
 
 
 class DonationFactory(BaseFactory):

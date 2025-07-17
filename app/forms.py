@@ -4,15 +4,15 @@ from wtforms import (
     PasswordField,
     BooleanField,
     SubmitField,
-    TextAreaField,
     DecimalField,
+    DateField,
 )
-from wtforms.fields import DateField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
-from app.models import User, Donor
-from typing import Any
+from app.models import User
+from app.utils import validate_user_email
 from app.extensions import db
-import phonenumbers
+from typing import Any
+
 
 
 class LoginForm(FlaskForm):
@@ -24,7 +24,7 @@ class LoginForm(FlaskForm):
 
 class RegistrationForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired(), Email()])
+    email = StringField("Email", validators=[DataRequired(), Email(), validate_user_email])
     password = PasswordField("Password", validators=[DataRequired()])
     password2 = PasswordField(
         "Repeat Password", validators=[DataRequired(), EqualTo("password")]
@@ -36,39 +36,8 @@ class RegistrationForm(FlaskForm):
         if user is not None:
             raise ValidationError("Please use a different username.")
 
-    def validate_email(self, email: StringField) -> None:
-        user = db.session.scalar(db.select(User).filter_by(email=email.data))
-        if user is not None:
-            raise ValidationError("Please use a different email address.")
 
 
-class DonorForm(FlaskForm):
-    name = StringField("Name", validators=[DataRequired()])
-    email = StringField("Email", validators=[DataRequired(), Email()])
-    phone = StringField("Phone")
-    address = TextAreaField("Address")
-    submit = SubmitField("Save Donor")
-    original_email: str | None = None
-
-    def validate_email(self, email: StringField) -> None:
-        if self.obj and self.obj.email == email.data:
-            return
-        donor = db.session.scalar(db.select(Donor).filter_by(email=email.data))
-        if donor is not None:
-            raise ValidationError("This email is already registered.")
-
-    def validate_phone(self, phone: StringField) -> None:
-        if phone.data:
-            try:
-                p = phonenumbers.parse(phone.data, "US")
-                if not phonenumbers.is_valid_number(p):
-                    raise ValidationError("Invalid phone number.")
-            except phonenumbers.phonenumberutil.NumberParseException:
-                raise ValidationError("Invalid phone number.")
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super(DonorForm, self).__init__(*args, **kwargs)
-        self.obj = kwargs.get("obj")
 
 
 class DonationForm(FlaskForm):
@@ -76,3 +45,4 @@ class DonationForm(FlaskForm):
     date = DateField("Date", validators=[DataRequired()], format="%Y-%m-%d")
     type = StringField("Type", validators=[DataRequired()])
     submit = SubmitField("Save Donation")
+

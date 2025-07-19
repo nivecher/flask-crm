@@ -2,4 +2,4 @@ from flask import Blueprint
 
 bp = Blueprint("donors", __name__)
 
-from app.donors import routes  # noqa: F401
+from . import routes  # noqa: F401, E402

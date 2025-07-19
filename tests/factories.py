@@ -21,12 +21,10 @@ class UserFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     username = factory.Sequence(lambda n: f"user{n}")
     email = factory.LazyAttribute(lambda obj: f"{obj.username}@example.com")
-    password_hash = factory.LazyFunction(
-        lambda: generate_password_hash("password")
-    )
+    password_hash = factory.LazyFunction(lambda: generate_password_hash("password"))
 
     @factory.post_generation
-    def password(self, create, extracted, **kwargs):
+    def password(self, create: bool, extracted: str | None, **kwargs: dict) -> None:
         if not create:
             # Simple build, do nothing.
             return
@@ -35,11 +33,9 @@ class UserFactory(BaseFactory):
         self.set_password(password_to_set)
 
 
-
-class DonorFactory(factory.alchemy.SQLAlchemyModelFactory):
+class DonorFactory(BaseFactory):
     class Meta:
         model = Donor
-        sqlalchemy_session = db.session
 
     id = factory.Sequence(lambda n: n)
     name = factory.Faker("name")
@@ -52,7 +48,6 @@ class DonorFactory(factory.alchemy.SQLAlchemyModelFactory):
     country = "US"
 
 
-
 class DonationFactory(BaseFactory):
     class Meta:
         model = Donation
@@ -62,4 +57,3 @@ class DonationFactory(BaseFactory):
     date = factory.LazyFunction(lambda: datetime.now(UTC))
     type = "Online"
     donor = factory.SubFactory(DonorFactory)
-

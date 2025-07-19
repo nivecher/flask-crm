@@ -1,7 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, Response
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
-from app.donors import bp
+from . import bp
 from app.donors.forms import DonorForm
 from app.donors.services import (
     get_donors_paginated,
@@ -19,7 +19,7 @@ from app.donations.forms import DonationForm
 
 @bp.route("/")
 @login_required
-def donors() -> ResponseReturnValue:
+def donors() -> "ResponseReturnValue":
     page = request.args.get("page", 1, type=int)
     donors_pagination = get_donors_paginated(page)
     next_url = (
@@ -48,9 +48,35 @@ def export_donors_csv() -> Response:
     donors = get_all_donors()
     si = io.StringIO()
     cw = csv.writer(si)
-    cw.writerow(["ID", "Name", "Email", "Phone", "Address Line 1", "Address Line 2", "City", "State", "Postal Code", "Country"])
+    cw.writerow(
+        [
+            "ID",
+            "Name",
+            "Email",
+            "Phone",
+            "Address Line 1",
+            "Address Line 2",
+            "City",
+            "State",
+            "Postal Code",
+            "Country",
+        ]
+    )
     for donor in donors:
-        cw.writerow([donor.id, donor.name, donor.email, donor.phone, donor.address_line1, donor.address_line2, donor.city, donor.state, donor.postal_code, donor.country])
+        cw.writerow(
+            [
+                donor.id,
+                donor.name,
+                donor.email,
+                donor.phone,
+                donor.address_line1,
+                donor.address_line2,
+                donor.city,
+                donor.state,
+                donor.postal_code,
+                donor.country,
+            ]
+        )
     output = si.getvalue()
     return Response(
         output,

@@ -56,7 +56,7 @@
         const suggestionsDiv = document.getElementById('address-suggestions');
         const validIndicator = document.getElementById('address-valid-indicator');
         const updateAddressBtn = document.getElementById('update-address-btn');
-        
+
         const address1 = document.getElementById('address_line1');
         const address2 = document.getElementById('address_line2');
         const city = document.getElementById('city');
@@ -116,9 +116,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) { throw new Error(data.error); }
-                    
+
                     const get = (type) => data.address_components.find(c => c.types.includes(type))?.long_name || '';
-                    
+
                     address1.value = data.formatted_address.split(',')[0];
                     address2.value = ''; // Clear this field
                     city.value = get('locality');

@@ -1,8 +1,11 @@
-from datetime import datetime, UTC
-import csv
-import io
 import logging
-from flask import render_template, redirect, url_for, flash, request, Response, jsonify, current_app
+from flask import (
+    render_template,
+    request,
+    Response,
+    jsonify,
+    current_app,
+)
 from flask.typing import ResponseReturnValue
 from flask_login import login_required
 from app.main import bp
@@ -10,12 +13,9 @@ from app.main.services import get_dashboard_data
 import requests
 
 
-
-import logging
-
 @bp.route("/api/address-autocomplete")
 @login_required
-def address_autocomplete() -> Response:
+def address_autocomplete() -> "Response":
     try:
         query = request.args.get("query", "")
         api_key = current_app.config["GOOGLE_API_KEY"]
@@ -32,14 +32,14 @@ def address_autocomplete() -> Response:
             logging.info(f"Google Places API response: {predictions}")
             return jsonify(predictions)
         return jsonify([])
-    except Exception as e:
+    except Exception:
         logging.exception("Error in address_autocomplete")
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 
 @bp.route("/api/place-details")
 @login_required
-def place_details() -> Response:
+def place_details() -> "Response":
     try:
         place_id = request.args.get("place_id", "")
         api_key = current_app.config["GOOGLE_API_KEY"]
@@ -54,7 +54,7 @@ def place_details() -> Response:
         if response.status_code == 200:
             return jsonify(response.json().get("result", {}))
         return jsonify({"error": "Failed to fetch place details"}), 500
-    except Exception as e:
+    except Exception:
         logging.exception("Error in place_details")
         return jsonify({"error": "An unexpected error occurred."}), 500
 
@@ -62,7 +62,7 @@ def place_details() -> Response:
 @bp.route("/")
 @bp.route("/dashboard")
 @login_required
-def dashboard() -> ResponseReturnValue:
+def dashboard() -> "ResponseReturnValue":
     total_donations, recent_donations, top_donors = get_dashboard_data()
     return render_template(
         "dashboard.html",
@@ -71,10 +71,3 @@ def dashboard() -> ResponseReturnValue:
         recent_donations=recent_donations,
         top_donors=top_donors,
     )
-
-
-
-
-
-
-

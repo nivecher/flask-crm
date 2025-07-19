@@ -6,7 +6,7 @@ from app.auth.services import create_user
 
 
 class AuthTestCase(BaseTestCase):
-    def test_registration(self):
+    def test_registration(self) -> None:
         response = self.client.post(
             "/auth/register",
             data={
@@ -24,7 +24,7 @@ class AuthTestCase(BaseTestCase):
         self.assertIsNotNone(user)
         self.assertEqual(user.email, "test@example.com")
 
-    def test_login_logout(self):
+    def test_login_logout(self) -> None:
         user = UserFactory(password="password")
         response = self.client.post(
             "/auth/login",
@@ -38,7 +38,7 @@ class AuthTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Sign In", response.data)
 
-    def test_login_with_invalid_password(self):
+    def test_login_with_invalid_password(self) -> None:
         user = UserFactory(password="password")
         response = self.client.post(
             "/auth/login",
@@ -49,7 +49,7 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Invalid username or password", response.data)
         self.assertIn(b"Sign In", response.data)
 
-    def test_registration_with_existing_username(self):
+    def test_registration_with_existing_username(self) -> None:
         user = UserFactory()
         response = self.client.post(
             "/auth/register",
@@ -63,7 +63,7 @@ class AuthTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Please use a different username.", response.data)
 
-    def test_registration_with_existing_email(self):
+    def test_registration_with_existing_email(self) -> None:
         user = UserFactory()
         response = self.client.post(
             "/auth/register",
@@ -77,7 +77,7 @@ class AuthTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Please use a different email address.", response.data)
 
-    def test_login_page_when_logged_in(self):
+    def test_login_page_when_logged_in(self) -> None:
         user = UserFactory(password="password")
         self.client.post(
             "/auth/login", data={"username": user.username, "password": "password"}
@@ -87,7 +87,7 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Dashboard", response.data)
         self.assertNotIn(b"Sign In", response.data)
 
-    def test_register_page_when_logged_in(self):
+    def test_register_page_when_logged_in(self) -> None:
         user = UserFactory(password="password")
         self.client.post(
             "/auth/login", data={"username": user.username, "password": "password"}
@@ -97,7 +97,7 @@ class AuthTestCase(BaseTestCase):
         self.assertIn(b"Dashboard", response.data)
         self.assertNotIn(b"Register", response.data)
 
-    def test_user_loader(self):
+    def test_user_loader(self) -> None:
         user = UserFactory(password="password")
         self.client.post(
             "/auth/login", data={"username": user.username, "password": "password"}
@@ -105,7 +105,7 @@ class AuthTestCase(BaseTestCase):
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)
 
-    def test_user_loader_after_logout(self):
+    def test_user_loader_after_logout(self) -> None:
         user = UserFactory(password="password")
         self.client.post(
             "/auth/login", data={"username": user.username, "password": "password"}
@@ -118,9 +118,11 @@ class AuthTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Dashboard", response.data)
 
-    def test_user_loader_with_new_client(self):
+    def test_user_loader_with_new_client(self) -> None:
         create_user("testuser", "test@example.com", "password")
-        self.client.post("/auth/login", data={"username": "testuser", "password": "password"})
+        self.client.post(
+            "/auth/login", data={"username": "testuser", "password": "password"}
+        )
         client2 = self.app.test_client()
         response = client2.get("/dashboard")
         self.assertEqual(response.status_code, 200)

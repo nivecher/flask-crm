@@ -6,7 +6,9 @@ from app.donors.forms import DonorForm
 
 def get_donors_paginated(page: int) -> Pagination:
     """Get a paginated list of donors."""
-    return db.paginate(db.select(Donor).order_by(Donor.name), page=page, per_page=10, error_out=False)
+    return db.paginate(
+        db.select(Donor).order_by(Donor.name), page=page, per_page=10, error_out=False
+    )
 
 
 def get_donor_or_404(donor_id: int) -> Donor:
@@ -14,7 +16,7 @@ def get_donor_or_404(donor_id: int) -> Donor:
     return db.get_or_404(Donor, donor_id)
 
 
-def create_donor(form: DonorForm) -> Donor:
+def create_donor(form: "DonorForm") -> "Donor":
     """Create a new donor."""
     donor = Donor(
         name=form.name.data,

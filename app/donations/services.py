@@ -5,14 +5,13 @@ from decimal import Decimal
 from app.donations.forms import DonationForm
 
 
-def create_donation(donor: Donor, form: DonationForm) -> Donation:
+def create_donation(donor: "Donor", form: "DonationForm") -> "Donation":
     """Create a new donation."""
-    donation = Donation(
-        amount=form.amount.data,
-        date=form.date.data,
-        type=form.type.data,
-        donor=donor,
-    )
+    donation = Donation()
+    donation.amount = form.amount.data
+    donation.date = form.date.data
+    donation.type = form.type.data
+    donation.donor = donor
     db.session.add(donation)
     db.session.commit()
     return donation

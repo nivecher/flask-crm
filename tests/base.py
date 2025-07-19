@@ -4,7 +4,7 @@ from app.extensions import db
 
 
 class BaseTestCase(unittest.TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.app = create_app("testing")
         self.app.config.update(WTF_CSRF_ENABLED=False)
         self.app_context = self.app.app_context()
@@ -12,7 +12,7 @@ class BaseTestCase(unittest.TestCase):
         db.create_all()
         self.client = self.app.test_client()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         db.session.remove()
         db.drop_all()
         db.engine.dispose()

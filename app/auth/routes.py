@@ -7,7 +7,7 @@ from app.auth.services import create_user, authenticate_user
 
 
 @bp.route("/login", methods=["GET", "POST"])
-def login() -> ResponseReturnValue:
+def login() -> "ResponseReturnValue":
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
     form = LoginForm()
@@ -22,13 +22,13 @@ def login() -> ResponseReturnValue:
 
 
 @bp.route("/logout")
-def logout() -> ResponseReturnValue:
+def logout() -> "ResponseReturnValue":
     logout_user()
     return redirect(url_for("main.dashboard"))
 
 
 @bp.route("/register", methods=["GET", "POST"])
-def register() -> ResponseReturnValue:
+def register() -> "ResponseReturnValue":
     if current_user.is_authenticated:
         return redirect(url_for("main.dashboard"))
     form = RegistrationForm()

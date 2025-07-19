@@ -7,7 +7,10 @@ from app.models import User, Donor
 from app.extensions import db
 
 
-def validate_phone(form, field):
+from typing import Any
+
+
+def validate_phone(form: Any, field: Any) -> None:
     """Validate a phone number."""
     if field.data:
         try:
@@ -18,10 +21,14 @@ def validate_phone(form, field):
             raise ValidationError("Invalid phone number.")
 
 
-def validate_user_email(form, field):
+def validate_user_email(form: Any, field: Any) -> None:
     """Validate an email address."""
     # For updates, allow the user to keep their own email
-    if hasattr(form, "instance") and form.instance and form.instance.email == field.data:
+    if (
+        hasattr(form, "instance")
+        and form.instance
+        and form.instance.email == field.data
+    ):
         return
 
     user = db.session.scalar(db.select(User).filter_by(email=field.data))
@@ -29,7 +36,7 @@ def validate_user_email(form, field):
         raise ValidationError("This email is already registered.")
 
 
-def validate_donor_email(form, field):
+def validate_donor_email(form: Any, field: Any) -> None:
     """Validate a donor's email address."""
     # For updates, allow the donor to keep their own email
     if hasattr(form, "obj") and form.obj and form.obj.email == field.data:

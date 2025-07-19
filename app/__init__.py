@@ -4,7 +4,7 @@ from .extensions import db, login, migrate
 import os
 
 
-def create_app(config_name: str | None = None) -> Flask:
+def create_app(config_name: str | None = None) -> "Flask":
     if config_name is None:
         config_name = os.getenv("FLASK_CONFIG", "development")
 
@@ -34,6 +34,7 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(donations_bp, url_prefix="/donation")
 
     from app.donors import bp as donors_bp
+
     app.register_blueprint(donors_bp, url_prefix="/donors")
 
     with app.app_context():

@@ -2,20 +2,20 @@
 
 ## Purpose
 
-This is a Flask-based Customer Relationship Management (CRM) application specifically designed for managing donors and their donations.
+A Flask-based Customer Relationship Management (CRM) application for managing donors and donations.
 
-## Guiding Principles (TIGER Style)
+## Project Guidelines
 
-This project adheres to the TIGER style of development, which emphasizes the following:
+This project adheres to the TIGER style of development:
 
-*   **Lean:** Keep the codebase concise and avoid unnecessary complexity.
-*   **Efficient:** Write performant code and be mindful of resource management (e.g., database connections).
-*   **Modern:** Use modern Python features and libraries (e.g., `factory-boy` for tests, proper timezone handling).
-*   **Strictly Organized:** Maintain a clear and logical project structure, separating concerns into blueprints, services, and forms.
-*   **Aggressively Refactored:** Continuously improve the code by eliminating redundancy and improving clarity.
+*   **Lean:** Maintain a concise codebase, avoiding unnecessary complexity.
+*   **Efficient:** Write performant code, mindful of resource management.
+*   **Modern:** Use current Python features and libraries (e.g., `factory-boy` for tests).
+*   **Strictly Organized:** Follow a clear project structure, separating concerns (blueprints, services, forms).
+*   **Aggressively Refactored:** Continuously improve code by eliminating redundancy.
 
-## Development Workflow
+### Workflow
 
-*   **Testing:** All new features must be accompanied by thorough unit tests. The goal is to maintain 100% test coverage.
-*   **Dependency Management:** Runtime and development dependencies are kept in separate `requirements.txt` and `requirements-dev.txt` files, respectively, with versions pinned.
-*   **Commits:** Changes are not autocommitted. Commits are made manually after verification and user approval.
+*   **Testing:** All new features require thorough unit tests, with the goal of 100% coverage.
+*   **Dependencies:** Pin all dependency versions in `requirements.txt` and `requirements-dev.txt`.
+*   **Commits:** Changes are not autocommitted and require manual verification and approval.

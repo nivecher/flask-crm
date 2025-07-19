@@ -1,5 +1,7 @@
+from typing import Dict, Type
 import os
 from dotenv import load_dotenv
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, ".env"))
@@ -42,7 +44,8 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     SECRET_KEY = "test-secret-key"
 
-config_by_name = dict(
+
+config_by_name: Dict[str, Type[Config]] = dict(
     development=DevConfig,
     testing=TestingConfig,
     production=ProdConfig,

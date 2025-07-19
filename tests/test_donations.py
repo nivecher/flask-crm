@@ -5,7 +5,7 @@ from tests.factories import UserFactory, DonorFactory, DonationFactory
 
 
 class DonationsTestCase(BaseTestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         user = UserFactory(password="password")
         self.client.post(
@@ -14,7 +14,7 @@ class DonationsTestCase(BaseTestCase):
             follow_redirects=True,
         )
 
-    def test_add_donation(self):
+    def test_add_donation(self) -> None:
         donor = DonorFactory()
         response = self.client.post(
             f"/donation/donor/{donor.id}/add_donation",
@@ -29,7 +29,7 @@ class DonationsTestCase(BaseTestCase):
         self.assertIsNotNone(donation)
         self.assertEqual(donation.amount, 100.00)
 
-    def test_add_donation_invalid(self):
+    def test_add_donation_invalid(self) -> None:
         donor = DonorFactory()
         response = self.client.post(
             f"/donation/donor/{donor.id}/add_donation",
@@ -39,7 +39,7 @@ class DonationsTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"This field is required.", response.data)
 
-    def test_edit_donation(self):
+    def test_edit_donation(self) -> None:
         donation = DonationFactory()
         response = self.client.post(
             f"/donation/{donation.id}/edit",
@@ -51,7 +51,7 @@ class DonationsTestCase(BaseTestCase):
         updated_donation = db.session.get(Donation, donation.id)
         self.assertEqual(updated_donation.amount, 150.00)
 
-    def test_delete_donation(self):
+    def test_delete_donation(self) -> None:
         donation = DonationFactory()
         response = self.client.post(
             f"/donation/{donation.id}/delete",
@@ -61,15 +61,15 @@ class DonationsTestCase(BaseTestCase):
         deleted_donation = db.session.get(Donation, donation.id)
         self.assertIsNone(deleted_donation)
 
-    def test_edit_nonexistent_donation(self):
+    def test_edit_nonexistent_donation(self) -> None:
         response = self.client.get("/donation/999/edit", follow_redirects=True)
         self.assertEqual(response.status_code, 404)
 
-    def test_delete_nonexistent_donation(self):
+    def test_delete_nonexistent_donation(self) -> None:
         response = self.client.post("/donation/999/delete", follow_redirects=True)
         self.assertEqual(response.status_code, 404)
 
-    def test_edit_donation_get(self):
+    def test_edit_donation_get(self) -> None:
         donation = DonationFactory()
         response = self.client.get(f"/donation/{donation.id}/edit")
         self.assertEqual(response.status_code, 200)

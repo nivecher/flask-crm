@@ -3,7 +3,7 @@ from tests.factories import UserFactory
 
 
 class DashboardTestCase(BaseTestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
         user = UserFactory(password="password")
         self.client.post(
@@ -12,12 +12,12 @@ class DashboardTestCase(BaseTestCase):
             follow_redirects=True,
         )
 
-    def test_dashboard(self):
+    def test_dashboard(self) -> None:
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Dashboard", response.data)
 
-    def test_address_autocomplete(self):
+    def test_address_autocomplete(self) -> None:
         from unittest.mock import patch
 
         mock_response = {

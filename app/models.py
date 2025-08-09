@@ -41,18 +41,53 @@ class Donor(db.Model):
     name: db.Mapped[str] = db.mapped_column(String(128), nullable=False)
     email: db.Mapped[str] = db.mapped_column(String(120), index=True, unique=True)
     phone: db.Mapped[str | None] = db.mapped_column(String(20), nullable=True)
-    address_line1: db.Mapped[str | None] = db.mapped_column(sa.String(128))
-    address_line2: db.Mapped[str | None] = db.mapped_column(sa.String(128))
-    city: db.Mapped[str | None] = db.mapped_column(sa.String(64))
-    state: db.Mapped[str | None] = db.mapped_column(sa.String(64))
-    postal_code: db.Mapped[str | None] = db.mapped_column(sa.String(20))
-    country: db.Mapped[str | None] = db.mapped_column(sa.String(64))
     donations: db.Mapped[list["Donation"]] = db.relationship(
         back_populates="donor", cascade="all, delete-orphan", passive_deletes=True
     )
+    addresses: db.Mapped[list["DonorAddress"]] = db.relationship(
+        back_populates="donor", cascade="all, delete-orphan"
+    )
+
+    @property
+    def current_address(self) -> Address | None:
+        current = [da.address for da in self.addresses if da.is_current]
+        return current[0] if current else None
 
     def __repr__(self) -> str:
         return f"<Donor {self.name}>"
+
+
+class Address(db.Model):
+    __tablename__ = "addresses"
+    id: db.Mapped[int] = db.mapped_column(Integer, primary_key=True)
+    address_line1: db.Mapped[str] = db.mapped_column(sa.String(128), nullable=False)
+    address_line2: db.Mapped[str | None] = db.mapped_column(sa.String(128))
+    city: db.Mapped[str] = db.mapped_column(sa.String(64), nullable=False)
+    state: db.Mapped[str] = db.mapped_column(sa.String(64), nullable=False)
+    postal_code: db.Mapped[str] = db.mapped_column(sa.String(20), nullable=False)
+    country: db.Mapped[str] = db.mapped_column(sa.String(64), nullable=False)
+    donors: db.Mapped[list["DonorAddress"]] = db.relationship(
+        back_populates="address", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Address {self.address_line1}>"
+
+
+class DonorAddress(db.Model):
+    __tablename__ = "donor_addresses"
+    donor_id: db.Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("donors.id"), primary_key=True
+    )
+    address_id: db.Mapped[int] = db.mapped_column(
+        Integer, ForeignKey("addresses.id"), primary_key=True
+    )
+    is_current: db.Mapped[bool] = db.mapped_column(default=True, nullable=False)
+    donor: db.Mapped["Donor"] = db.relationship(back_populates="addresses")
+    address: db.Mapped["Address"] = db.relationship(back_populates="donors")
+
+    def __repr__(self) -> str:
+        return f"<DonorAddress donor_id={self.donor_id} address_id={self.address_id}>"
 
 
 class Donation(db.Model):

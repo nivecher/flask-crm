@@ -26,6 +26,11 @@ class DonorTestCase(BaseTestCase):
                     "name": "John Doe",
                     "email": "john.doe@example.com",
                     "phone": "1234567890",
+                    "current_address-address_line1": "123 Main St",
+                    "current_address-city": "Springfield",
+                    "current_address-country": "USA",
+                    "current_address-state": "IL",
+                    "current_address-postal_code": "62704",
                 },
                 follow_redirects=True,
             )

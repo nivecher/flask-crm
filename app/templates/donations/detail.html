@@ -5,12 +5,57 @@
     <h1>{{ donor.name }}</h1>
     <p><strong>Email:</strong> {{ donor.email }}</p>
     <p><strong>Phone:</strong> {{ donor.phone }}</p>
-    <p><strong>Address:</strong><br>
-        {{ donor.address_line1 }}<br>
-        {% if donor.address_line2 %}{{ donor.address_line2 }}<br>{% endif %}
-        {{ donor.city }}, {{ donor.state }} {{ donor.postal_code }}<br>
-        {{ donor.country }}
-    </p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Current Address</h3>
+            {% if donor.current_address %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{{ url_for('donors.donor_detail', id=donor.id) }}">
+                                {{ donor.current_address.address_line1 }}
+                            </a>
+                            <span class="badge bg-success">Current</span>
+                        </h5>
+                        <p class="card-text">
+                            {% if donor.current_address.address_line2 %}{{ donor.current_address.address_line2 }}<br>{% endif %}
+                            {{ donor.current_address.city }}, {{ donor.current_address.state }} {{ donor.current_address.postal_code }}<br>
+                            {{ donor.current_address.country }}
+                        </p>
+                        <div class="map-placeholder" style="height: 150px; background-color: #e9ecef; text-align: center; line-height: 150px;">
+                            Map Placeholder
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No current address on file.</p>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h3>Former Addresses</h3>
+            {% if former_addresses %}
+                {% for address in former_addresses %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ address.address_line1 }}
+                            </h5>
+                            <p class="card-text">
+                                {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+                                {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+                                {{ address.country }}
+                            </p>
+                            <a href="{{ url_for('donors.set_current_address', donor_id=donor.id, address_id=address.id) }}" class="btn btn-sm btn-outline-secondary">Set as Current</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No former addresses on file.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <a href="{{ url_for('donors.edit_donor', id=donor.id) }}" class="btn btn-secondary">Edit Donor</a>
 
     <hr>

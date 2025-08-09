@@ -1,6 +1,6 @@
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
-from app.models import User, Donor, Donation
+from app.models import User, Donor, Donation, Address, DonorAddress
 from app.extensions import db
 from datetime import datetime, UTC
 from decimal import Decimal
@@ -33,6 +33,27 @@ class UserFactory(BaseFactory):
         self.set_password(password_to_set)
 
 
+class AddressFactory(BaseFactory):
+    class Meta:
+        model = Address
+
+    id = factory.Sequence(lambda n: n)
+    address_line1 = factory.Faker("street_address")
+    city = factory.Faker("city")
+    state = factory.Faker("state_abbr")
+    postal_code = factory.Faker("zipcode")
+    country = "US"
+
+
+class DonorAddressFactory(BaseFactory):
+    class Meta:
+        model = DonorAddress
+
+    donor = factory.SubFactory("tests.factories.DonorFactory")
+    address = factory.SubFactory(AddressFactory)
+    is_current = True
+
+
 class DonorFactory(BaseFactory):
     class Meta:
         model = Donor
@@ -41,11 +62,12 @@ class DonorFactory(BaseFactory):
     name = factory.Faker("name")
     email = factory.Sequence(lambda n: f"donor{n}@example.com")
     phone = factory.Faker("phone_number")
-    address_line1 = factory.Faker("street_address")
-    city = factory.Faker("city")
-    state = factory.Faker("state_abbr")
-    postal_code = factory.Faker("zipcode")
-    country = "US"
+    addresses = factory.RelatedFactory(
+        DonorAddressFactory,
+        factory_related_name="donor",
+        address=factory.SubFactory(AddressFactory),
+        is_current=True,
+    )
 
 
 class DonationFactory(BaseFactory):

@@ -17,6 +17,48 @@ from datetime import datetime, UTC
 from app.donations.forms import DonationForm
 
 
+@bp.route(
+    "/<int:donor_id>/address/<int:address_id>/set-current", methods=["POST", "GET"]
+)
+@login_required
+def set_current_address(donor_id: int, address_id: int):
+    donor = get_donor_or_404(donor_id)
+    address = None
+    for da in donor.addresses:
+        if da.address.id == address_id:
+            address = da.address
+            da.is_current = True
+        else:
+            da.is_current = False
+    if address:
+        from app.extensions import db
+
+        db.session.commit()
+        flash("Current address updated.")
+    else:
+        flash("Address not found.", "danger")
+    return redirect(url_for("donors.donor_detail", id=donor_id))
+
+
+from flask import render_template, redirect, url_for, flash, request, Response
+from flask.typing import ResponseReturnValue
+from flask_login import login_required
+from . import bp
+from app.donors.forms import DonorForm
+from app.donors.services import (
+    get_donors_paginated,
+    get_donor_or_404,
+    create_donor,
+    update_donor,
+    delete_donor,
+    get_all_donors,
+)
+import csv
+import io
+from datetime import datetime, UTC
+from app.donations.forms import DonationForm
+
+
 @bp.route("/")
 @login_required
 def donors() -> "ResponseReturnValue":
@@ -63,18 +105,19 @@ def export_donors_csv() -> Response:
         ]
     )
     for donor in donors:
+        current_address = donor.current_address
         cw.writerow(
             [
                 donor.id,
                 donor.name,
                 donor.email,
                 donor.phone,
-                donor.address_line1,
-                donor.address_line2,
-                donor.city,
-                donor.state,
-                donor.postal_code,
-                donor.country,
+                current_address.address_line1 if current_address else "",
+                current_address.address_line2 if current_address else "",
+                current_address.city if current_address else "",
+                current_address.state if current_address else "",
+                current_address.postal_code if current_address else "",
+                current_address.country if current_address else "",
             ]
         )
     output = si.getvalue()
@@ -92,8 +135,13 @@ def donor_detail(id: int) -> ResponseReturnValue:
     form = DonationForm()
     if request.method == "GET":
         form.date.data = datetime.now(UTC)
+    former_addresses = [da.address for da in donor.addresses if not da.is_current]
     return render_template(
-        "donations/detail.html", title=donor.name, donor=donor, form=form
+        "donations/detail.html",
+        title=donor.name,
+        donor=donor,
+        form=form,
+        former_addresses=former_addresses,
     )
 
 
@@ -102,7 +150,8 @@ def donor_detail(id: int) -> ResponseReturnValue:
 def add_donor() -> ResponseReturnValue:
     form = DonorForm()
     if form.validate_on_submit():
-        create_donor(form)
+        current_address_data = form.current_address.data
+        create_donor(form, current_address_data)
         flash("Donor added successfully.")
         return redirect(url_for("donors.donors"))
     return render_template("donors/form.html", title="Add Donor", form=form)
@@ -113,12 +162,26 @@ def add_donor() -> ResponseReturnValue:
 def edit_donor(id: int) -> ResponseReturnValue:
     donor = get_donor_or_404(id)
     form = DonorForm(obj=donor)
-    form.instance = donor  # Pass instance to form
+    address = donor.current_address
+    if address:
+        for field in form.current_address.form:
+            if hasattr(address, field.name):
+                field.data = getattr(address, field.name)
     if form.validate_on_submit():
-        update_donor(donor, form)
+        current_address_data = form.current_address.data
+        update_donor(donor, form, current_address_data)
         flash("Donor updated successfully.")
         return redirect(url_for("donors.donor_detail", id=donor.id))
-    return render_template("donors/form.html", title="Edit Donor", form=form)
+    else:
+        import logging
+
+        logging.warning(f"Donor form not valid: {form.errors}")
+        flash(
+            "Form submission failed. Please check for errors and try again.", "danger"
+        )
+    return render_template(
+        "donors/form.html", title="Edit Donor", form=form, donor=donor
+    )
 
 
 @bp.route("/<int:id>/delete", methods=["POST"])

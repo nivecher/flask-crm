@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Address Details</h1>
+    <p>
+        {{ address.address_line1 }}<br>
+        {% if address.address_line2 %}{{ address.address_line2 }}<br>{% endif %}
+        {{ address.city }}, {{ address.state }} {{ address.postal_code }}<br>
+        {{ address.country }}
+    </p>
+
+    <hr>
+
+    <h2>Donors at this Address</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for donor_address in address.donors %}
+            <tr>
+                <td><a href="{{ url_for('donors.donor_detail', id=donor_address.donor.id) }}">{{ donor_address.donor.name }}</a></td>
+                <td>{{ donor_address.donor.email }}</td>
+                <td>{{ donor_address.donor.phone }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">No donors found at this address.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}
